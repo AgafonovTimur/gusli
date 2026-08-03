@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Гусли · Тренажёр аккордов</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=PT+Sans:wght@400;700&family=PT+Mono&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #1a120c;
+    --bg-panel: #251a12;
+    --bg-panel-2: #2f2116;
+    --bg-panel-3: #3a2a1c;
+    --wood-line: #4d3a28;
+    --wood-line-soft: #3a2c1f;
+    --text: #f2e6d3;
+    --text-dim: #bfa987;
+    --text-faint: #8a7458;
+    --gold: #cfa64e;
+    --gold-soft: #8a6d34;
+    --red-open: #cf4b3a;
+    --red-open-glow: #ea6a52;
+    --green-cov: #6a9463;
+    --green-cov-glow: #86b47d;
+    --string-neutral: #57493a;
+    --radius: 10px;
+    --shadow: 0 8px 24px rgba(0,0,0,0.35);
+  }
+  html[data-theme="graphite"]{
+    --bg: #101010;
+    --bg-panel: #1a1a1a;
+    --bg-panel-2: #202020;
+    --bg-panel-3: #292929;
+    --wood-line: #2c2c2c;
+    --wood-line-soft: #232323;
+    --text: #e7e7e7;
+    --text-dim: #a7a7a7;
+    --text-faint: #6e6e6e;
+    --gold: #d0d0d0;
+    --gold-soft: #969696;
+    --red-open: #cf4b3a;
+    --red-open-glow: #ea6a52;
+    --green-cov: #6a9463;
+    --green-cov-glow: #86b47d;
+    --string-neutral: #3a3a3a;
+    --shadow: 0 8px 24px rgba(0,0,0,0.5);
+  }
+  html[data-theme="graphite"] .pill.active,
+  html[data-theme="graphite"] button.btn.primary{ color:#111; }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: radial-gradient(ellipse at 20% -10%, #2a1d13 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: 'PT Sans', sans-serif;
+    min-height: 100vh;
+    padding: 28px 20px 60px;
+    transition: background .2s ease, color .2s ease;
+  }
+  html[data-theme="graphite"] body{
+    background: var(--bg);
+  }
+  .wrap{max-width: 1120px; margin: 0 auto;}
+  h1,h2,h3{font-family:'PT Serif', serif; font-weight:700; margin:0;}
+  .tabs-row{display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:10px; margin-bottom:24px;}
+  .theme-switch{display:flex; gap:6px;}
+  .theme-switch button{
+    background:var(--bg-panel-2); border:1px solid var(--wood-line); color:var(--text-faint);
+    border-radius:6px; padding:6px 12px; cursor:pointer; font-family:'PT Sans',sans-serif; font-size:12.5px;
+  }
+  .theme-switch button.active{border-color:var(--gold-soft); color:var(--gold);}
+
+
+  nav.tabs{display:inline-flex; gap:6px; flex-wrap:wrap; border-bottom:1px solid var(--wood-line); max-width:100%;}
+  nav.tabs button{
+    background:none; border:none; color:var(--text-dim); font-family:'PT Serif',serif; font-size:16px;
+    padding:10px 18px; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px;
+    transition: color .15s ease, border-color .15s ease;
+  }
+  nav.tabs button:hover{color:var(--text);}
+  nav.tabs button.active{color:var(--gold); border-bottom-color:var(--gold);}
+  nav.tabs button:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible{
+    outline: 2px solid var(--gold); outline-offset: 2px;
+  }
+
+  .view{display:none;}
+  .view.active{display:block; animation: fade .25s ease;}
+  @media (prefers-reduced-motion: reduce){ .view.active{animation:none;} }
+  @keyframes fade{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;}}
+
+  .card{background:var(--bg-panel); border:1px solid var(--wood-line-soft); border-radius:var(--radius); padding:20px; box-shadow: var(--shadow);}
+  .row{display:flex; gap:14px; flex-wrap:wrap;}
+
+  /* ---- pills / chips ---- */
+  .pill-row{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;}
+  .pill{
+    background:var(--bg-panel-2); border:1px solid var(--wood-line); color:var(--text-dim);
+    border-radius:999px; padding:8px 16px; cursor:pointer; font-family:'PT Sans',sans-serif; font-size:14px;
+    display:flex; align-items:center; gap:8px; transition: all .15s ease;
+  }
+  .pill .roman{font-family:'PT Mono',monospace; color:var(--gold-soft); font-size:12px;}
+  .pill:hover{border-color:var(--gold-soft); color:var(--text);}
+  .pill.active{background:var(--gold); color:#241905; border-color:var(--gold); font-weight:700;}
+  .pill.active .roman{color:#241905;}
+
+  .chip-row{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px;}
+  .chip{
+    background:transparent; border:1px solid var(--wood-line); color:var(--text-faint);
+    border-radius:6px; padding:6px 10px; cursor:pointer; font-family:'PT Mono',monospace; font-size:12.5px;
+  }
+  .chip:hover{color:var(--text-dim); border-color:var(--gold-soft);}
+  .chip.active{border-color:var(--green-cov-glow); color:var(--green-cov-glow); background:rgba(106,148,99,.12);}
+  .chip.learned-badge::before{content:"✓ "; }
+
+  /* ---- trainer layout ---- */
+  .trainer-grid{display:grid; grid-template-columns: 1.35fr 1fr; gap:20px;}
+  @media (max-width: 820px){ .trainer-grid{grid-template-columns:1fr;} }
+
+  .diagram-card{display:flex; flex-direction:column; align-items:center; gap:12px;}
+  .diagram-card svg{width:100%; height:auto; max-width:560px;}
+
+  .legend{display:flex; gap:18px; flex-wrap:wrap; font-size:12.5px; color:var(--text-faint); font-family:'PT Mono',monospace;}
+  .legend span{display:inline-flex; align-items:center; gap:6px;}
+  .legend i{width:12px; height:12px; border-radius:3px; display:inline-block;}
+  .legend i.open{background:var(--red-open);}
+  .legend i.cov{background:var(--green-cov);}
+  .legend i.neu{background:var(--string-neutral);}
+
+  .info-card h2{font-size:24px; color:var(--gold); margin-bottom:2px;}
+  .info-card .letters{font-family:'PT Mono',monospace; color:var(--text-dim); font-size:15px; margin-bottom:14px;}
+  .info-line{display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px dashed var(--wood-line-soft); font-size:14px;}
+  .info-line b{color:var(--text-dim); font-weight:400;}
+  .info-line span{color:var(--text); font-family:'PT Mono',monospace;}
+  .comment-box{margin-top:12px; padding:10px 12px; background:var(--bg-panel-2); border-left:3px solid var(--gold-soft); border-radius:4px; font-size:13.5px; color:var(--text-dim); font-style:italic;}
+
+  .learn-toggle{margin-top:16px; display:flex; align-items:center; gap:10px; cursor:pointer; user-select:none;}
+  .learn-toggle input{width:18px; height:18px; accent-color: var(--gold);}
+  .learn-toggle span{font-size:14px; color:var(--text-dim);}
+
+  button.btn{
+    background:var(--bg-panel-3); color:var(--text); border:1px solid var(--wood-line); border-radius:7px;
+    padding:9px 16px; font-family:'PT Sans',sans-serif; font-size:13.5px; cursor:pointer; transition:all .15s ease;
+  }
+  button.btn:hover{border-color:var(--gold-soft); color:var(--gold);}
+  button.btn.primary{background:var(--gold); color:#241905; border-color:var(--gold); font-weight:700;}
+  button.btn.primary:hover{background:var(--gold-soft); color:#fff;}
+  button.btn:disabled{opacity:.4; cursor:not-allowed;}
+
+  .quiz-bar{display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:18px; flex-wrap:wrap;}
+  .quiz-switch{display:flex; align-items:center; gap:10px; font-size:14px; color:var(--text-dim);}
+  .quiz-switch input{width:36px; height:20px;}
+  .quiz-controls{display:flex; gap:8px; flex-wrap:wrap;}
+
+  /* ---- sequence builder ---- */
+  .seq-strip{display:grid; grid-template-columns:repeat(8,1fr); gap:10px; margin-bottom:18px;}
+  @media (max-width:900px){ .seq-strip{grid-template-columns:repeat(4,1fr);} }
+  @media (max-width:520px){ .seq-strip{grid-template-columns:repeat(2,1fr);} }
+  .seq-slot{background:var(--bg-panel-2); border:1px solid var(--wood-line); border-radius:8px; padding:8px; text-align:center;}
+  .seq-slot .num{font-family:'PT Mono',monospace; font-size:11px; color:var(--text-faint);}
+  .seq-slot select{width:100%; margin-top:6px; background:var(--bg-panel-3); color:var(--text); border:1px solid var(--wood-line); border-radius:5px; padding:4px; font-size:12px; font-family:'PT Sans',sans-serif;}
+  .seq-slot svg{width:100%; height:70px; margin-top:6px;}
+  .seq-slot .lbl{font-size:11.5px; color:var(--text-dim); margin-top:4px; min-height:14px;}
+  .seq-slot.playing{border-color:var(--gold); box-shadow:0 0 0 2px rgba(207,166,78,.35);}
+
+  .seq-controls{display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:10px;}
+  .seq-controls label{font-size:13px; color:var(--text-faint);}
+  .save-row{display:flex; gap:8px; align-items:center; margin-top:16px; flex-wrap:wrap;}
+  .save-row input[type=text]{background:var(--bg-panel-2); border:1px solid var(--wood-line); color:var(--text); border-radius:6px; padding:8px 10px; font-family:'PT Sans',sans-serif; font-size:13.5px;}
+  .saved-list{margin-top:14px; display:flex; gap:8px; flex-wrap:wrap;}
+  .saved-chip{display:flex; align-items:center; gap:8px; background:var(--bg-panel-2); border:1px solid var(--wood-line); border-radius:6px; padding:6px 6px 6px 12px; font-size:13px;}
+  .saved-chip button{background:none; border:none; color:var(--text-faint); cursor:pointer; font-size:14px;}
+  .saved-chip button:hover{color:var(--red-open-glow);}
+  .saved-chip .load{color:var(--gold); cursor:pointer; text-decoration:underline;}
+
+  /* ---- table ---- */
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  thead th{text-align:left; padding:9px 8px; color:var(--gold-soft); font-family:'PT Mono',monospace; font-weight:400; font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid var(--wood-line); cursor:pointer; white-space:nowrap;}
+  thead th:hover{color:var(--gold);}
+  thead th.sorted::after{content:" ▾";}
+  thead th.sorted.asc::after{content:" ▴";}
+  tbody td{padding:8px; border-bottom:1px solid var(--wood-line-soft); vertical-align:top;}
+  tbody tr:hover{background:rgba(207,166,78,.05);}
+  .mono{font-family:'PT Mono',monospace; font-size:12.5px;}
+  .tag-learned{color:var(--green-cov-glow); font-size:12px;}
+  .table-scroll{overflow-x:auto;}
+  .cb{width:16px; height:16px; accent-color:var(--gold);}
+
+  /* ---- progress ---- */
+  .progress-top{display:flex; gap:24px; align-items:center; margin-bottom:24px; flex-wrap:wrap;}
+  .ring{width:120px; height:120px; flex:none;}
+  .prog-stat b{font-size:34px; font-family:'PT Serif',serif; color:var(--gold); display:block;}
+  .prog-stat span{color:var(--text-faint); font-size:13px;}
+  .bar-row{display:grid; grid-template-columns: 130px 1fr 60px; align-items:center; gap:12px; margin-bottom:12px; font-size:13.5px;}
+  .bar-track{background:var(--bg-panel-2); border-radius:6px; height:10px; overflow:hidden;}
+  .bar-fill{height:100%; background:linear-gradient(90deg, var(--green-cov), var(--green-cov-glow));}
+  .remaining-list{margin-top:26px;}
+  .remaining-item{display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px dashed var(--wood-line-soft); font-size:13.5px;}
+  .remaining-item .jump{color:var(--gold); cursor:pointer; font-size:12.5px; background:none; border:1px solid var(--gold-soft); border-radius:5px; padding:4px 10px;}
+  .remaining-item .jump:hover{background:var(--gold); color:#241905;}
+
+  .foot-note{margin-top:28px; padding-top:16px; border-top:1px solid var(--wood-line-soft); color:var(--text-faint); font-size:12.5px; line-height:1.6;}
+  .foot-note b{color:var(--text-dim);}
+  ::selection{background:var(--gold); color:#241905;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="tabs-row">
+    <nav class="tabs">
+      <button data-view="trainer" class="active">Тренажёр</button>
+      <button data-view="builder">Конструктор</button>
+      <button data-view="quiz">Угадай‑ка</button>
+      <button data-view="table">Таблица</button>
+      <button data-view="progress">Прогресс</button>
+    </nav>
+    <div class="theme-switch" id="themeSwitch">
+      <button data-theme-btn="wood">Дерево</button>
+      <button data-theme-btn="graphite" class="active">Графит</button>
+    </div>
+  </div>
+
+  <!-- ================= TRAINER ================= -->
+  <section class="view active" id="view-trainer">
+    <div id="pickerBlock">
+      <div class="pill-row" id="chordPills"></div>
+      <div class="pill-row" id="qualityPills"></div>
+      <div class="chip-row" id="posChips"></div>
+    </div>
+
+    <div class="trainer-grid">
+      <div class="card diagram-card">
+        <svg id="mainSvg" viewBox="0 0 640 480" xmlns="http://www.w3.org/2000/svg"></svg>
+        <div class="legend">
+          <span><i class="open"></i> открыта — звучит</span>
+          <span><i class="cov"></i> прижата — глушится</span>
+          <span><i class="neu"></i> не используется в этом аккорде</span>
+        </div>
+      </div>
+      <div class="card info-card" id="infoCard"></div>
+    </div>
+  </section>
+
+  <!-- ================= BUILDER ================= -->
+  <section class="view" id="view-builder">
+    <p style="color:var(--text-faint); font-size:13.5px; margin-top:0 0 16px;">Соберите последовательность из 8 аккордов. Над каждой ступенью — своя схема струн для гуслей.</p>
+    <div class="seq-strip" id="seqStrip"></div>
+    <div class="seq-controls">
+      <button class="btn" id="seqClear">Очистить</button>
+      <button class="btn" id="seqRandom">Случайная последовательность</button>
+    </div>
+  </section>
+
+  <!-- ================= QUIZ ================= -->
+  <section class="view" id="view-quiz">
+    <p style="color:var(--text-faint); font-size:13.5px; margin:0 0 16px;">Аккорд скрыт. Определите его по положению рук, затем нажмите «Показать ответ».</p>
+    <div class="quiz-controls" id="quizControls" style="display:flex;">
+      <button class="btn" id="quizReveal">Показать ответ</button>
+      <button class="btn" id="quizKnow">Знаю →</button>
+      <button class="btn" id="quizRepeat">Ещё учу →</button>
+    </div>
+    <div class="trainer-grid">
+      <div class="card diagram-card">
+        <svg id="quizSvg" viewBox="0 0 640 480" xmlns="http://www.w3.org/2000/svg"></svg>
+        <div class="legend">
+          <span><i class="open"></i> открыта — звучит</span>
+          <span><i class="cov"></i> прижата — глушится</span>
+          <span><i class="neu"></i> не используется в этом аккорде</span>
+        </div>
+      </div>
+      <div class="card info-card" id="quizInfoCard"></div>
+    </div>
+  </section>
+
+  <!-- ================= TABLE ================= -->
+  <section class="view" id="view-table">
+    <div class="chip-row" id="tableFilterChips"></div>
+    <div class="table-scroll">
+      <table id="dataTable">
+        <thead>
+          <tr>
+            <th data-key="open">Открытая струна</th>
+            <th data-key="covered">Перекрытая струна</th>
+            <th data-key="startNotation">Струна начала аккорда</th>
+            <th data-key="learned">Выучил?</th>
+            <th data-key="chordDisplay">Аккорд</th>
+            <th data-key="topTone">Начиная сверху</th>
+            <th data-key="degreeAmajNum">Ступень в Amaj</th>
+            <th data-key="degreeFmin">Ступень в F#min</th>
+            <th data-key="letters">Буквы аккорда</th>
+            <th data-key="comment">Комментарий</th>
+            <th data-key="topString">1‑я струна аккорда</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ================= PROGRESS ================= -->
+  <section class="view" id="view-progress">
+    <div class="card">
+      <div class="progress-top">
+        <svg class="ring" viewBox="0 0 120 120" id="progressRing"></svg>
+        <div class="prog-stat"><b id="progPct">0%</b><span id="progCount">0 из 27 позиций выучено</span></div>
+      </div>
+      <div id="progressBars"></div>
+      <div class="remaining-list">
+        <h3 style="font-size:15px; color:var(--text-dim); margin-bottom:10px;">Ещё не выучено</h3>
+        <div id="remainingList"></div>
+      </div>
+    </div>
+  </section>
+
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============================================================
+     DATA — расшифровано из таблицы «Аккорды гуслей»
+     ============================================================ */
+  // корни ступеней диатонического звукоряда A dur
+  const ROOTS = ["A","B","C#","D","E","F#"];
+  const ROOT_META = {
+    "A":  { roman:"I",   triad:"maj" },
+    "B":  { roman:"ii",  triad:"min" },
+    "C#": { roman:"iii", triad:"min" },
+    "D":  { roman:"IV",  triad:"maj" },
+    "E":  { roman:"V",   triad:"maj" },
+    "F#": { roman:"vi",  triad:"min" }
+  };
+  // на диатонических гуслях у каждой ступени ровно ОДНА "родная" септаккордовая окраска —
+  // выбора нет, она определяется интервалами внутри гаммы
+  const ROOT_SEVENTH = { "A":"maj7", "B":"min7", "C#":"min7", "D":"maj7", "E":"dom7", "F#":"min7" };
+
+  const QUALITY_META = {
+    maj:  { label:"мажор",  suffix:"" },
+    min:  { label:"минор",  suffix:"" },
+    sus2: { label:"sus2",   suffix:"sus2" },
+    sus4: { label:"sus4",   suffix:"sus4" },
+    dom7: { label:"7 · малый мажорный (доминантсептаккорд)", suffix:"7" },
+    maj7: { label:"maj7 · большой мажорный септаккорд",      suffix:"maj7" },
+    min7: { label:"m7 · малый минорный септаккорд",          suffix:"m7" }
+  };
+  const QUALITY_ORDER = ["maj","min","sus2","sus4","dom7","maj7","min7"];
+
+  // ноты аккордов — посчитаны внутри диатонической гаммы A dur (A B C# D E F# G#)
+  const CHORD_LETTERS = {
+    "A_maj":"A · C# · E",   "A_sus2":"A · B · E",   "A_sus4":"A · D · E",   "A_maj7":"A · C# · E · G#",
+    "B_min":"B · D · F#",   "B_sus2":"B · C# · F#", "B_sus4":"B · E · F#",  "B_min7":"B · D · F# · A",
+    "C#_min":"C# · E · G#", "C#_sus2":"C# · D · G#","C#_sus4":"C# · F# · G#","C#_min7":"C# · E · G# · B",
+    "D_maj":"D · F# · A",   "D_sus2":"D · E · A",   "D_sus4":"D · G# · A",  "D_maj7":"D · F# · A · C#",
+    "E_maj":"E · G# · B",   "E_sus2":"E · F# · B",  "E_sus4":"E · A · B",   "E_dom7":"E · G# · B · D",
+    "F#_min":"F# · A · C#", "F#_sus2":"F# · G# · C#","F#_sus4":"F# · B · C#","F#_min7":"F# · A · C# · E"
+  };
+
+  function qualitiesFor(root){
+    return [ROOT_META[root].triad, "sus2", "sus4", ROOT_SEVENTH[root]];
+  }
+  function chordKey(root, quality){ return root+"_"+quality; }
+
+  // финальный список аккордов: трезвучия (с реальными аппликатурами) + sus2/sus4/септаккорды
+  // (аппликатур для новых типов пока нет — см. пояснение в чате, нужно дописать их в RAW)
+  const CHORD_META = {};
+  const CHORD_ORDER = [];
+  ROOTS.forEach(root=>{
+    qualitiesFor(root).forEach(q=>{
+      const key = chordKey(root, q);
+      if(CHORD_META[key]) return;
+      let roman = ROOT_META[root].roman;
+      if(q!=="maj" && q!=="min") roman += QUALITY_META[q].suffix;
+      CHORD_META[key] = {
+        roman,
+        letters: CHORD_LETTERS[key] || "—",
+        name: root + " " + QUALITY_META[q].label,
+        root, quality:q
+      };
+      CHORD_ORDER.push(key);
+    });
+  });
+
+  // open / covered — списки струн; topString = «1-я струна аккорда» (самая верхняя)
+  const RAW = [
+    {chord:"E_maj",  open:[15,13,11], covered:[14,12],    topString:15, topTone:1, degAmaj:"V",  degFmin:"VII", comment:"", start:"миз 14 - 01 01 00", learned:true},
+    {chord:"A_maj",  open:[15,12,10], covered:[14,13,9],  topString:15, topTone:3, degAmaj:"I",  degFmin:"",    comment:"", start:"миз 14 - 00 10 10", learned:true},
+    {chord:"C#_min", open:[15,13,10], covered:[14,12,11], topString:15, topTone:2, degAmaj:"III",degFmin:"",    comment:"", start:"миз 14 - 01 00 10 10", learned:true},
+    {chord:"B_min",  open:[14,11,9],  covered:[13,12,10], topString:14, topTone:3, degAmaj:"II", degFmin:"",    comment:"", start:"миз 13 - 00 10 10 10", learned:false},
+    {chord:"F#_min", open:[14,12,10], covered:[13,11],    topString:14, topTone:1, degAmaj:"VI",degFmin:"",comment:"", start:"миз 13 - 01 01 00 10", learned:false},
+    {chord:"D_maj",  open:[14,12,9],  covered:[13,11,10], topString:14, topTone:2, degAmaj:"IV", degFmin:"",    comment:"", start:"миз 13 - 01 00 10 10", learned:false},
+    {chord:"E_maj",  open:[13,11,8],  covered:[12,10,9],  topString:13, topTone:1, degAmaj:"V",  degFmin:"",    comment:"", start:"миз 14 - 01 01 00", learned:false},
+    {chord:"C#_min", open:[13,10,8],  covered:[12,11,9],  topString:13, topTone:2, degAmaj:"III",degFmin:"",    comment:"", start:"миз 14 - 01 00 10 10", learned:false},
+    {chord:"A_maj",  open:[12,10,8],  covered:[11,9],     topString:12, topTone:3, degAmaj:"I",  degFmin:"",    comment:"", start:"миз 14 - 00 10 10", learned:false},
+    {chord:"D_maj",  open:[12,9,7],   covered:[11,10,8],  topString:12, topTone:2, degAmaj:"IV", degFmin:"",    comment:"", start:"миз 13 - 01 00 10 10", learned:false},
+    {chord:"F#_min", open:[12,10,7],  covered:[11,9,8],   topString:12, topTone:1, degAmaj:"VI",degFmin:"",comment:"", start:"миз 13 - 01 01 00 10", learned:false},
+    {chord:"E_maj",  open:[11,8,6],   covered:[10,9,7],   topString:11, topTone:1, degAmaj:"V",  degFmin:"",    comment:"", start:"миз 14 - 01 01 00", learned:true},
+    {chord:"B_min",  open:[11,9,7],   covered:[10,8],     topString:11, topTone:3, degAmaj:"II", degFmin:"",    comment:"", start:"миз 13 - 00 10 10 10", learned:false},
+    {chord:"A_maj",  open:[10,8,5],   covered:[9,7,6],    topString:10, topTone:2, degAmaj:"I",  degFmin:"",    comment:"", start:"без 2 - 01 01 00 10", learned:false},
+    {chord:"C#_min", open:[10,8,6],   covered:[9,7],      topString:10, topTone:2, degAmaj:"III",degFmin:"",    comment:"", start:"миз 14 - 01 00 10 10", learned:false},
+    {chord:"F#_min", open:[10,7,5],   covered:[9,8,6],    topString:10, topTone:1, degAmaj:"VI",degFmin:"",comment:"", start:"миз 13 - 01 01 00 10", learned:false},
+    {chord:"B_min",  open:[9,7,4],    covered:[8,6,5],    topString:9,  topTone:2, degAmaj:"II", degFmin:"",    comment:"", start:"ук 3 - 01 00 10", learned:false},
+    {chord:"D_maj",  open:[9,7,5],    covered:[8,6],      topString:9,  topTone:2, degAmaj:"IV", degFmin:"",    comment:"", start:"миз 13 - 01 00 10 10", learned:false},
+    {chord:"E_maj",  open:[8,6,4],    covered:[7,5],      topString:8,  topTone:1, degAmaj:"V",  degFmin:"",    comment:"", start:"ук 2 - 00 10 10", learned:true},
+    {chord:"A_maj",  open:[8,5,3],    covered:[7,6],      topString:8,  topTone:2, degAmaj:"I",  degFmin:"",    comment:"", start:"без 2 - 01 01 00 10", learned:false},
+    {chord:"C#_min", open:[8,6,3],    covered:[7,5,4],    topString:8,  topTone:2, degAmaj:"III",degFmin:"",    comment:"", start:"ук 2 - 01 00 10", learned:false},
+    {chord:"B_min",  open:[7,4,2],    covered:[6,5,3],    topString:7,  topTone:2, degAmaj:"II", degFmin:"",    comment:"", start:"ук 3 - 01 00 10", learned:false},
+    {chord:"D_maj",  open:[7,5,2],    covered:[6,4,3],    topString:7,  topTone:1, degAmaj:"IV", degFmin:"",    comment:"", start:"ук 3 - 00 10 10", learned:false},
+    {chord:"F#_min", open:[7,5,3],    covered:[6,4],      topString:7,  topTone:1, degAmaj:"VI",degFmin:"",comment:"", start:"ук 1 - 00 10 10", learned:false},
+    {chord:"E_maj",  open:[6,4,1],    covered:[5,3,2],    topString:6,  topTone:1, degAmaj:"V",  degFmin:"",    comment:"", start:"ук 2 - 00 10 10", learned:true},
+    {chord:"C#_min", open:[6,3,1],    covered:[5,4,2],    topString:6,  topTone:2, degAmaj:"III",degFmin:"",    comment:"", start:"ук 2 - 01 00 10", learned:false},
+    {chord:"A_maj",  open:[5,3,1],    covered:[4,2],      topString:5,  topTone:2, degAmaj:"I",  degFmin:"",    comment:"", start:"без 2 - 01 01 00 10", learned:false},
+
+    // ==== sus2 / sus4 / септаккорды — open проставлен по нотам, covered нужно дозаполнить вручную ====
+    {chord:"A_sus2", open:[15,12,11], covered:[], topString:15, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"A_sus2", open:[12,11,8], covered:[], topString:12, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"A_sus2", open:[8,5,4], covered:[], topString:8, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"A_sus2", open:[5,4,1], covered:[], topString:5, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"A_sus4", open:[15,12,9], covered:[], topString:15, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"A_sus4", open:[12,9,8], covered:[], topString:12, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"A_sus4", open:[9,8,5], covered:[], topString:9, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"A_sus4", open:[8,5,2], covered:[], topString:8, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"A_sus4", open:[5,2,1], covered:[], topString:5, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"A_maj7", open:[15,13,12,10], covered:[], topString:15, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"A_maj7", open:[13,12,10,8], covered:[], topString:13, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"A_maj7", open:[10,8,6,5], covered:[], topString:10, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"A_maj7", open:[8,6,5,3], covered:[], topString:8, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"A_maj7", open:[6,5,3,1], covered:[], topString:6, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"B_sus2", open:[14,11,10], covered:[], topString:14, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"B_sus2", open:[11,10,7], covered:[], topString:11, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"B_sus2", open:[7,4,3], covered:[], topString:7, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"B_sus4", open:[14,11,8], covered:[], topString:14, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"B_sus4", open:[11,8,7], covered:[], topString:11, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"B_sus4", open:[8,7,4], covered:[], topString:8, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"B_sus4", open:[7,4,1], covered:[], topString:7, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"B_min7", open:[14,12,11,9], covered:[], topString:14, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"B_min7", open:[12,11,9,7], covered:[], topString:12, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"B_min7", open:[9,7,5,4], covered:[], topString:9, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"B_min7", open:[7,5,4,2], covered:[], topString:7, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"C#_sus2", open:[13,10,9], covered:[], topString:13, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"C#_sus2", open:[10,9,6], covered:[], topString:10, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"C#_sus2", open:[6,3,2], covered:[], topString:6, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"C#_sus4", open:[14,13,10], covered:[], topString:14, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"C#_sus4", open:[13,10,7], covered:[], topString:13, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"C#_sus4", open:[10,7,6], covered:[], topString:10, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"C#_sus4", open:[7,6,3], covered:[], topString:7, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"C#_min7", open:[15,13,11,10], covered:[], topString:15, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"C#_min7", open:[13,11,10,8], covered:[], topString:13, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"C#_min7", open:[11,10,8,6], covered:[], topString:11, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"C#_min7", open:[8,6,4,3], covered:[], topString:8, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"C#_min7", open:[6,4,3,1], covered:[], topString:6, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"D_sus2", open:[12,9,8], covered:[], topString:12, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"D_sus2", open:[9,8,5], covered:[], topString:9, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"D_sus2", open:[5,2,1], covered:[], topString:5, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"D_sus4", open:[13,12,9], covered:[], topString:13, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"D_sus4", open:[12,9,6], covered:[], topString:12, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"D_sus4", open:[9,6,5], covered:[], topString:9, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"D_sus4", open:[6,5,2], covered:[], topString:6, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"D_maj7", open:[14,12,10,9], covered:[], topString:14, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"D_maj7", open:[12,10,9,7], covered:[], topString:12, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"D_maj7", open:[10,9,7,5], covered:[], topString:10, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"D_maj7", open:[7,5,3,2], covered:[], topString:7, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"E_sus2", open:[15,14,11], covered:[], topString:15, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"E_sus2", open:[11,8,7], covered:[], topString:11, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"E_sus2", open:[8,7,4], covered:[], topString:8, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"E_sus2", open:[7,4,1], covered:[], topString:7, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"E_sus4", open:[15,12,11], covered:[], topString:15, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"E_sus4", open:[12,11,8], covered:[], topString:12, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"E_sus4", open:[11,8,5], covered:[], topString:11, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"E_sus4", open:[8,5,4], covered:[], topString:8, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"E_sus4", open:[5,4,1], covered:[], topString:5, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"E_dom7", open:[15,13,11,9], covered:[], topString:15, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"E_dom7", open:[13,11,9,8], covered:[], topString:13, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"E_dom7", open:[11,9,8,6], covered:[], topString:11, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"E_dom7", open:[9,8,6,4], covered:[], topString:9, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"E_dom7", open:[6,4,2,1], covered:[], topString:6, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"F#_sus2", open:[14,13,10], covered:[], topString:14, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"F#_sus2", open:[10,7,6], covered:[], topString:10, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"F#_sus2", open:[7,6,3], covered:[], topString:7, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"F#_sus4", open:[14,11,10], covered:[], topString:14, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"F#_sus4", open:[11,10,7], covered:[], topString:11, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"F#_sus4", open:[10,7,4], covered:[], topString:10, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"F#_sus4", open:[7,4,3], covered:[], topString:7, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"F#_min7", open:[15,14,12,10], covered:[], topString:15, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"F#_min7", open:[12,10,8,7], covered:[], topString:12, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"F#_min7", open:[10,8,7,5], covered:[], topString:10, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+    {chord:"F#_min7", open:[8,7,5,3], covered:[], topString:8, topTone:"—", degAmaj:"", degFmin:"", comment:"нужно дописать covered", start:"", learned:false},
+  ];
+
+  const DATA = RAW.map((r,i)=>({
+    id: r.chord + "_" + r.topString,
+    idx:i,
+    ...r
+  }));
+
+  /* ============================================================
+     STATE + persistence (window.storage)
+     ============================================================ */
+  const state = {
+    learned: new Set(DATA.filter(d=>d.learned).map(d=>d.id)),
+    currentRoot: "A",
+    currentQuality: "maj",
+    get currentChord(){ return chordKey(this.currentRoot, this.currentQuality); },
+    currentId: null,
+    tableSort: {key:"topString", dir:"desc"},
+    tableFilter: new Set(CHORD_ORDER),
+    tableOnlyUnlearned: false,
+    sequence: new Array(8).fill(null),
+    quizId: null,
+    quizRevealed: false
+  };
+
+  async function loadStorage(){
+    try{
+      const learnedRes = await window.storage.get('learned-ids', false);
+      if(learnedRes && learnedRes.value){
+        const arr = JSON.parse(learnedRes.value);
+        state.learned = new Set(arr);
+      }
+    }catch(e){ /* keep defaults from table */ }
+  }
+  async function saveLearned(){
+    try{ await window.storage.set('learned-ids', JSON.stringify([...state.learned]), false); }catch(e){}
+  }
+
+  function byId(id){ return DATA.find(d=>d.id===id); }
+  function positionsFor(chordKey){ return DATA.filter(d=>d.chord===chordKey).sort((a,b)=>b.topString-a.topString); }
+
+  /* ============================================================
+     SVG diagram
+     ============================================================ */
+  function stringColor(n, pos, hide){
+    if(hide) return "var(--string-neutral)";
+    if(pos.open.includes(n)) return "var(--red-open)";
+    if(pos.covered.includes(n)) return "var(--green-cov)";
+    return "var(--string-neutral)";
+  }
+
+  const STRING_NOTES = {15:"E",14:"F#",13:"G#",12:"A",11:"B",10:"C#",9:"D",8:"E",7:"F#",6:"G#",5:"A",4:"B",3:"C#",2:"D",1:"E"};
+
+  function fanSVG(pos, hide){
+    const W=640,H=480, xNut=100, yTop=32, yBot=452, n=15;
+    const xShort=250, xLong=596;
+    let strings="", labels="", noteLabels="";
+    for(let s=15;s>=1;s--){
+      const t=(s-1)/14;
+      const y = yTop + (yBot-yTop)*((s-1)/14);
+      const xEnd = xShort + (xLong-xShort)*t;
+      const involved = pos.open.includes(s) || pos.covered.includes(s);
+      const col = stringColor(s,pos,hide);
+      const w = involved && !hide ? 4 : 2;
+      const op = involved || hide===false && false ? 1 : (involved?1:0.35);
+      strings += `<line x1="${xNut}" y1="${y}" x2="${xEnd}" y2="${y}" stroke="${col}" stroke-width="${w}" stroke-linecap="round" opacity="${involved?1:0.4}"/>`;
+      strings += `<circle cx="${xNut}" cy="${y}" r="${involved?4:2.5}" fill="${col}" opacity="${involved?1:0.5}"/>`;
+      const labCol = involved ? (hide? "var(--text-faint)" : "var(--text)") : "var(--text-faint)";
+      labels += `<text x="${xEnd+10}" y="${y+4}" font-family="PT Mono, monospace" font-size="13" fill="${labCol}">${s}</text>`;
+      noteLabels += `<text x="${xNut-24}" y="${y+4}" text-anchor="end" font-family="PT Mono, monospace" font-size="12.5" fill="${labCol}">${hide?"":STRING_NOTES[s]}</text>`;
+    }
+    const board = `<path d="M ${xNut-14} ${yTop-14} L ${xNut-14} ${yBot+14} L ${xLong+2} ${yBot+14} L ${xShort+2} ${yTop-14} Z" fill="var(--bg-panel-2)" stroke="var(--wood-line)" stroke-width="1.5" opacity="0.55"/>`;
+    return `${board}${strings}${labels}${noteLabels}`;
+  }
+
+  function miniSVG(pos){
+    if(!pos) return `<line x1="10" y1="35" x2="110" y2="35" stroke="var(--wood-line)" stroke-width="1"/>`;
+    const H=70,W=120, top=8, bot=62;
+    let out="";
+    for(let s=15;s>=1;s--){
+      const y = top + (bot-top)*((15-s)/14);
+      const involved = pos.open.includes(s) || pos.covered.includes(s);
+      if(!involved) continue;
+      const col = pos.open.includes(s) ? "var(--red-open)" : "var(--green-cov)";
+      out += `<line x1="10" y1="${y}" x2="110" y2="${y}" stroke="${col}" stroke-width="3" stroke-linecap="round"/>`;
+    }
+    return out;
+  }
+
+  /* ============================================================
+     TRAINER TAB
+     ============================================================ */
+  const chordPillsEl = document.getElementById('chordPills');
+  const posChipsEl = document.getElementById('posChips');
+  const mainSvg = document.getElementById('mainSvg');
+  const infoCard = document.getElementById('infoCard');
+  const pickerBlock = document.getElementById('pickerBlock');
+
+  const qualityPillsEl = document.getElementById('qualityPills');
+
+  function renderChordPills(){
+    chordPillsEl.innerHTML = ROOTS.map(root=>{
+      const active = root===state.currentRoot ? "active":"";
+      return `<button class="pill ${active}" data-root="${root}"><span class="roman">${ROOT_META[root].roman}</span> ${root}</button>`;
+    }).join("");
+    chordPillsEl.querySelectorAll('.pill').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        state.currentRoot = btn.dataset.root;
+        // если у нового корня нет такого типа аккорда — переключаемся на трезвучие
+        if(!qualitiesFor(state.currentRoot).includes(state.currentQuality)){
+          state.currentQuality = ROOT_META[state.currentRoot].triad;
+        }
+        selectFirstAvailable();
+        renderTrainer();
+      });
+    });
+  }
+
+  function renderQualityPills(){
+    qualityPillsEl.innerHTML = qualitiesFor(state.currentRoot).map(q=>{
+      const key = chordKey(state.currentRoot, q);
+      const active = q===state.currentQuality ? "active":"";
+      const empty = positionsFor(key).length===0 ? " (нет аппликатур)":"";
+      return `<button class="pill ${active}" data-quality="${q}">${QUALITY_META[q].suffix || QUALITY_META[q].label}${empty}</button>`;
+    }).join("");
+    qualityPillsEl.querySelectorAll('.pill').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        state.currentQuality = btn.dataset.quality;
+        selectFirstAvailable();
+        renderTrainer();
+      });
+    });
+  }
+
+  function selectFirstAvailable(){
+    const positions = positionsFor(state.currentChord);
+    state.currentId = positions.length ? positions[0].id : null;
+  }
+
+  function renderPosChips(){
+    const positions = positionsFor(state.currentChord);
+    if(positions.length===0){ posChipsEl.innerHTML = ""; return; }
+    posChipsEl.innerHTML = positions.map(p=>{
+      const active = p.id===state.currentId ? "active":"";
+      const learnedMark = state.learned.has(p.id) ? "learned-badge":"";
+      return `<button class="chip ${active} ${learnedMark}" data-id="${p.id}">струны ${Math.min(...p.open,...p.covered)}–${p.topString}</button>`;
+    }).join("");
+    posChipsEl.querySelectorAll('.chip').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        state.currentId = btn.dataset.id;
+        state.quizRevealed = false;
+        renderTrainer();
+      });
+    });
+  }
+
+  function renderDiagram(){
+    if(!state.currentId){ mainSvg.innerHTML = ""; return; }
+    const pos = byId(state.currentId);
+    mainSvg.innerHTML = fanSVG(pos, false);
+  }
+
+  function renderInfo(){
+    if(!state.currentId){
+      const meta = CHORD_META[state.currentChord];
+      infoCard.innerHTML = `
+        <h2>${meta.roman} · ${meta.name}</h2>
+        <div class="letters">${meta.letters}</div>
+        <div class="comment-box">Для этого аккорда пока не внесены аппликатуры (открытые/прижатые струны). Добавьте позиции в массив RAW — так же, как для трезвучий.</div>
+      `;
+      return;
+    }
+    const pos = byId(state.currentId);
+    const meta = CHORD_META[pos.chord];
+    infoCard.innerHTML = `
+      <h2>${meta.roman} · ${meta.name}</h2>
+      <div class="letters">${meta.letters}</div>
+      <div class="info-line"><b>Открытые струны</b><span>${pos.open.join(', ')}</span></div>
+      <div class="info-line"><b>Прижатые струны</b><span>${pos.covered.join(', ')}</span></div>
+      <div class="info-line"><b>Ступень в A dur</b><span>${pos.degAmaj}</span></div>
+      <div class="info-line"><b>Начиная сверху</b><span>${pos.topTone}</span></div>
+      <div class="info-line"><b>1‑я струна аккорда</b><span>${pos.topString}</span></div>
+      <div class="info-line"><b>Шифр позиции</b><span>${pos.start}</span></div>
+      ${pos.comment ? `<div class="comment-box">${pos.comment}</div>` : ""}
+      <label class="learn-toggle">
+        <input type="checkbox" id="learnedBox" ${state.learned.has(pos.id)?"checked":""}>
+        <span>Отметить как выученную позицию</span>
+      </label>
+    `;
+    document.getElementById('learnedBox').addEventListener('change', (e)=>{
+      if(e.target.checked) state.learned.add(pos.id); else state.learned.delete(pos.id);
+      saveLearned();
+      renderPosChips();
+      renderProgress();
+    });
+  }
+
+  function renderTrainer(){
+    renderChordPills();
+    renderQualityPills();
+    renderPosChips();
+    renderDiagram();
+    renderInfo();
+  }
+
+  /* ============================================================
+     QUIZ TAB (угадай‑ка)
+     ============================================================ */
+  const quizSvg = document.getElementById('quizSvg');
+  const quizInfoCard = document.getElementById('quizInfoCard');
+
+  function pickRandomQuiz(){
+    const idx = Math.floor(Math.random()*DATA.length);
+    state.quizId = DATA[idx].id;
+    state.quizRevealed = false;
+  }
+
+  function renderQuiz(){
+    if(!state.quizId) pickRandomQuiz();
+    const pos = byId(state.quizId);
+    const meta = CHORD_META[pos.chord];
+    const hide = !state.quizRevealed;
+    quizSvg.innerHTML = fanSVG(pos, hide);
+    if(hide){
+      quizInfoCard.innerHTML = `
+        <h2>?</h2>
+        <div class="letters">Определите аккорд по положению рук и нажмите «Показать ответ»</div>
+        <div class="info-line"><b>Верхняя струна</b><span>${pos.topString}</span></div>
+      `;
+      return;
+    }
+    quizInfoCard.innerHTML = `
+      <h2>${meta.roman} · ${meta.name}</h2>
+      <div class="letters">${meta.letters}</div>
+      <div class="info-line"><b>Открытые струны</b><span>${pos.open.join(', ')}</span></div>
+      <div class="info-line"><b>Прижатые струны</b><span>${pos.covered.join(', ')}</span></div>
+      <div class="info-line"><b>Ступень в A dur</b><span>${pos.degAmaj}</span></div>
+      <div class="info-line"><b>Начиная сверху</b><span>${pos.topTone}</span></div>
+      <div class="info-line"><b>1‑я струна аккорда</b><span>${pos.topString}</span></div>
+      <div class="info-line"><b>Шифр позиции</b><span>${pos.start}</span></div>
+      ${pos.comment ? `<div class="comment-box">${pos.comment}</div>` : ""}
+    `;
+  }
+
+  document.getElementById('quizReveal').addEventListener('click', ()=>{
+    state.quizRevealed = true; renderQuiz();
+  });
+  document.getElementById('quizKnow').addEventListener('click', ()=>{
+    state.learned.add(state.quizId); saveLearned();
+    pickRandomQuiz(); renderQuiz(); renderProgress();
+  });
+  document.getElementById('quizRepeat').addEventListener('click', ()=>{
+    state.learned.delete(state.quizId); saveLearned();
+    pickRandomQuiz(); renderQuiz(); renderProgress();
+  });
+
+  /* ============================================================
+     TABS
+     ============================================================ */
+  document.querySelectorAll('nav.tabs button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+      document.getElementById('view-'+btn.dataset.view).classList.add('active');
+      if(btn.dataset.view==='table') renderTable();
+      if(btn.dataset.view==='progress') renderProgress();
+      if(btn.dataset.view==='builder') renderBuilder();
+      if(btn.dataset.view==='quiz') renderQuiz();
+    });
+  });
+  function jumpToTrainer(id){
+    const pos = byId(id);
+    state.currentChord = pos.chord;
+    state.currentId = id;
+    document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
+    document.querySelector('nav.tabs button[data-view="trainer"]').classList.add('active');
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    document.getElementById('view-trainer').classList.add('active');
+    renderTrainer();
+  }
+
+  /* ============================================================
+     BUILDER TAB
+     ============================================================ */
+  const seqStrip = document.getElementById('seqStrip');
+  function renderBuilder(){
+    seqStrip.innerHTML = state.sequence.map((id,i)=>{
+      const pos = id ? byId(id) : null;
+      const chordVal = pos ? pos.chord : "";
+      const posOptions = CHORD_ORDER.map(ck=>`<option value="${ck}" ${ck===chordVal?"selected":""}>${CHORD_META[ck].roman} ${CHORD_META[ck].name.split(' ')[0]}</option>`).join("");
+      const variantOptions = pos ? positionsFor(pos.chord).map(p=>`<option value="${p.id}" ${p.id===id?"selected":""}>${Math.min(...p.open,...p.covered)}–${p.topString}</option>`).join("") : "";
+      return `
+        <div class="seq-slot" data-slot="${i}">
+          <div class="num">${i+1}</div>
+          <select class="chordSel" data-slot="${i}">
+            <option value="">—</option>
+            ${posOptions}
+          </select>
+          <select class="variantSel" data-slot="${i}" ${!pos?'style="display:none"':''}>
+            ${variantOptions}
+          </select>
+          <svg viewBox="0 0 120 70">${miniSVG(pos)}</svg>
+          <div class="lbl">${pos? CHORD_META[pos.chord].roman : ''}</div>
+        </div>
+      `;
+    }).join("");
+    wireBuilderSelects();
+  }
+
+  function wireBuilderSelects(){
+    seqStrip.querySelectorAll('.chordSel').forEach(sel=>{
+      sel.addEventListener('change', ()=>{
+        const i = +sel.dataset.slot;
+        const ck = sel.value;
+        state.sequence[i] = ck ? positionsFor(ck)[0].id : null;
+        renderBuilder();
+      });
+    });
+    seqStrip.querySelectorAll('.variantSel').forEach(sel=>{
+      sel.addEventListener('change', ()=>{
+        const i = +sel.dataset.slot;
+        state.sequence[i] = sel.value;
+        renderBuilder();
+      });
+    });
+  }
+
+  document.getElementById('seqClear').addEventListener('click', ()=>{
+    state.sequence = new Array(8).fill(null); renderBuilder();
+  });
+  document.getElementById('seqRandom').addEventListener('click', ()=>{
+    state.sequence = new Array(8).fill(null).map(()=>{
+      const ck = CHORD_ORDER[Math.floor(Math.random()*CHORD_ORDER.length)];
+      const opts = positionsFor(ck);
+      return opts[Math.floor(Math.random()*opts.length)].id;
+    });
+    renderBuilder();
+  });
+
+  /* ============================================================
+     TABLE TAB
+     ============================================================ */
+  const tableFilterChips = document.getElementById('tableFilterChips');
+  const tableBody = document.getElementById('tableBody');
+
+  function renderFilterChips(){
+    let html = CHORD_ORDER.map(ck=>{
+      const active = state.tableFilter.has(ck) ? "active":"";
+      return `<button class="chip ${active}" data-filter="${ck}">${CHORD_META[ck].roman} ${CHORD_META[ck].name.split(' ')[0]}</button>`;
+    }).join("");
+    html += `<button class="chip ${state.tableOnlyUnlearned?'active':''}" id="onlyUnlearned">только невыученные</button>`;
+    tableFilterChips.innerHTML = html;
+    tableFilterChips.querySelectorAll('[data-filter]').forEach(chip=>{
+      chip.addEventListener('click', ()=>{
+        const ck = chip.dataset.filter;
+        if(state.tableFilter.has(ck)) state.tableFilter.delete(ck); else state.tableFilter.add(ck);
+        renderFilterChips(); renderTable();
+      });
+    });
+    document.getElementById('onlyUnlearned').addEventListener('click', ()=>{
+      state.tableOnlyUnlearned = !state.tableOnlyUnlearned;
+      renderFilterChips(); renderTable();
+    });
+  }
+
+  function renderTable(){
+    renderFilterChips();
+    let rows = DATA.filter(d=> state.tableFilter.has(d.chord) && (!state.tableOnlyUnlearned || !state.learned.has(d.id)));
+    const key = state.tableSort.key, dir = state.tableSort.dir;
+    rows = rows.slice().sort((a,b)=>{
+      let av,bv;
+      if(key==='open'){ av=a.open[0]; bv=b.open[0]; }
+      else if(key==='covered'){ av=a.covered[0]||0; bv=b.covered[0]||0; }
+      else if(key==='learned'){ av=state.learned.has(a.id)?1:0; bv=state.learned.has(b.id)?1:0; }
+      else if(key==='chordDisplay'){ av=CHORD_META[a.chord].name; bv=CHORD_META[b.chord].name; }
+      else if(key==='degreeAmajNum'){ av=CHORD_ORDER.indexOf(a.chord); bv=CHORD_ORDER.indexOf(b.chord); }
+      else { av=a[key]; bv=b[key]; }
+      if(av<bv) return dir==='asc'?-1:1;
+      if(av>bv) return dir==='asc'?1:-1;
+      return 0;
+    });
+    tableBody.innerHTML = rows.map(d=>`
+      <tr>
+        <td class="mono">${d.open.join(', ')}</td>
+        <td class="mono">${d.covered.join(', ')}</td>
+        <td class="mono">${d.start}</td>
+        <td><input type="checkbox" class="cb" data-tid="${d.id}" ${state.learned.has(d.id)?'checked':''}></td>
+        <td>${CHORD_META[d.chord].name} <span style="color:var(--text-faint)">(${CHORD_META[d.chord].roman})</span></td>
+        <td class="mono">${d.topTone}</td>
+        <td class="mono">${d.degAmaj}</td>
+        <td class="mono">${d.degFmin||''}</td>
+        <td class="mono">${CHORD_META[d.chord].letters}</td>
+        <td>${d.comment||''}</td>
+        <td class="mono">${d.topString}</td>
+      </tr>
+    `).join("");
+    tableBody.querySelectorAll('.cb').forEach(cb=>{
+      cb.addEventListener('change', (e)=>{
+        const id = e.target.dataset.tid;
+        if(e.target.checked) state.learned.add(id); else state.learned.delete(id);
+        saveLearned(); renderProgress();
+      });
+    });
+  }
+
+  document.querySelectorAll('#dataTable thead th').forEach(th=>{
+    th.addEventListener('click', ()=>{
+      const key = th.dataset.key;
+      if(state.tableSort.key===key){ state.tableSort.dir = state.tableSort.dir==='asc'?'desc':'asc'; }
+      else { state.tableSort = {key, dir:'asc'}; }
+      document.querySelectorAll('#dataTable thead th').forEach(t=>t.classList.remove('sorted','asc'));
+      th.classList.add('sorted'); if(state.tableSort.dir==='asc') th.classList.add('asc');
+      renderTable();
+    });
+  });
+
+  /* ============================================================
+     PROGRESS TAB
+     ============================================================ */
+  function renderProgress(){
+    const total = DATA.length;
+    const learnedCount = DATA.filter(d=>state.learned.has(d.id)).length;
+    const pct = Math.round(100*learnedCount/total);
+    document.getElementById('progPct').textContent = pct+'%';
+    document.getElementById('progCount').textContent = `${learnedCount} из ${total} позиций выучено`;
+
+    const r=52, c=2*Math.PI*r;
+    const ring = document.getElementById('progressRing');
+    ring.innerHTML = `
+      <circle cx="60" cy="60" r="${r}" fill="none" stroke="var(--bg-panel-2)" stroke-width="10"/>
+      <circle cx="60" cy="60" r="${r}" fill="none" stroke="var(--gold)" stroke-width="10"
+        stroke-dasharray="${c}" stroke-dashoffset="${c*(1-pct/100)}" stroke-linecap="round"
+        transform="rotate(-90 60 60)"/>
+      <text x="60" y="66" text-anchor="middle" font-family="PT Serif, serif" font-size="20" fill="var(--text)">${pct}%</text>
+    `;
+
+    const bars = document.getElementById('progressBars');
+    bars.innerHTML = CHORD_ORDER.map(ck=>{
+      const items = positionsFor(ck);
+      const done = items.filter(d=>state.learned.has(d.id)).length;
+      const p = Math.round(100*done/items.length);
+      return `
+        <div class="bar-row">
+          <div>${CHORD_META[ck].roman} · ${CHORD_META[ck].name.split(' ')[0]}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${p}%"></div></div>
+          <div class="mono" style="text-align:right;">${done}/${items.length}</div>
+        </div>
+      `;
+    }).join("");
+
+    const remaining = DATA.filter(d=>!state.learned.has(d.id)).sort((a,b)=> a.chord.localeCompare(b.chord) || b.topString-a.topString);
+    const remainingList = document.getElementById('remainingList');
+    if(remaining.length===0){
+      remainingList.innerHTML = `<div style="color:var(--green-cov-glow); padding:10px 0;">Все позиции выучены — можно повторять по кругу 🎉</div>`;
+    } else {
+      remainingList.innerHTML = remaining.map(d=>`
+        <div class="remaining-item">
+          <span>${CHORD_META[d.chord].roman} · ${CHORD_META[d.chord].name.split(' ')[0]} — струны ${Math.min(...d.open,...d.covered)}–${d.topString}</span>
+          <button class="jump" data-id="${d.id}">Открыть в тренажёре</button>
+        </div>
+      `).join("");
+      remainingList.querySelectorAll('.jump').forEach(btn=>{
+        btn.addEventListener('click', ()=> jumpToTrainer(btn.dataset.id));
+      });
+    }
+  }
+
+  /* ============================================================
+     THEME SWITCHER
+     ============================================================ */
+  const themeSwitch = document.getElementById('themeSwitch');
+  function applyTheme(theme){
+    if(theme==='graphite') document.documentElement.setAttribute('data-theme','graphite');
+    else document.documentElement.removeAttribute('data-theme');
+    themeSwitch.querySelectorAll('button').forEach(b=>{
+      b.classList.toggle('active', b.dataset.themeBtn===theme);
+    });
+  }
+  themeSwitch.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const theme = btn.dataset.themeBtn;
+      applyTheme(theme);
+      try{ await window.storage.set('ui-theme', theme, false); }catch(e){}
+    });
+  });
+  async function loadTheme(){
+    applyTheme('graphite'); // тёмная тема по умолчанию
+    try{
+      const res = await window.storage.get('ui-theme', false);
+      if(res && res.value) applyTheme(res.value);
+    }catch(e){}
+  }
+
+  /* ============================================================
+     INIT
+     ============================================================ */
+  (async function init(){
+    await loadStorage();
+    await loadTheme();
+    selectFirstAvailable();
+    renderTrainer();
+    renderProgress();
+  })();
+
+})();
+</script>
+</body>
+</html>
