@@ -100,10 +100,10 @@
   }
   .wrap{max-width: 1320px; margin: 0 auto;}
   h1,h2,h3{font-family:'PT Sans Bold Embedded', Arial, sans-serif, 'PT Serif', serif; font-weight:700; margin:0;}
-  .tabs-row{display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:10px; margin-bottom:16px;}
+  .tabs-row{display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:nowrap; gap:10px; margin-bottom:16px;}
 
 
-  nav.tabs{display:inline-flex; gap:6px; flex-wrap:wrap; border-bottom:1px solid var(--wood-line); max-width:100%;}
+  nav.tabs{display:inline-flex; gap:6px; flex-wrap:wrap; border-bottom:1px solid var(--wood-line); max-width:100%; flex:none;}
   nav.tabs button{
     background:none; border:none; color:var(--text-dim); font-family:'PT Sans Bold Embedded', Arial, sans-serif, 'PT Serif',serif; font-size:16px;
     padding:10px 18px; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px;
@@ -191,7 +191,11 @@
      can wrap onto 2 lines) so switching between chords with different
      numbers of position chips (e.g. 3 vs 4) never shifts the info card
      below it */
-  #pickerBlock{min-height:230px;}
+  #pickerBlock{
+    min-height:230px;
+    background:var(--bg-panel); border:1px solid var(--wood-line-soft); border-radius:var(--radius);
+    padding:20px; box-shadow: var(--shadow);
+  }
   #pickerBlock .pill-row{min-height:41px;}
   #pickerBlock .chip-row{min-height:76px; align-content:flex-start; margin-bottom:0;}
 
@@ -274,7 +278,7 @@
     transform:translateX(-50%);
     padding:0 20px;
   }
-  .builder-toolbar{display:flex; align-items:center; justify-content:flex-end; gap:8px; flex-wrap:wrap;}
+  .builder-toolbar{display:flex; align-items:center; justify-content:flex-end; gap:8px; flex-wrap:wrap; min-width:0;}
   .seq-length-select{
     background:var(--bg-panel-2); color:var(--text); border:1px solid var(--wood-line); border-radius:6px;
     padding:9px 12px; font-size:14px; font-family:'PT Sans Bold Embedded', Arial, sans-serif, 'PT Sans',sans-serif;
@@ -282,6 +286,30 @@
   }
   .seq-length-select:hover{border-color:var(--gold-soft);}
   .builder-kbd-indicator{color:var(--text-dim); font-family:'PT Sans Bold Embedded', Arial, sans-serif, 'PT Mono',monospace; font-size:12.5px; display:flex; align-items:center; gap:4px;}
+
+  /* ---- popular progressions dropdown ---- */
+  .progression-dropdown{position:relative; flex:none;}
+  .progression-btn{display:flex; align-items:center; gap:6px; white-space:nowrap; padding:9px 12px;}
+  .progression-btn .arrow{font-size:10px; transition:transform .15s ease;}
+  .progression-btn.active .arrow{transform:rotate(180deg);}
+  .progression-btn.active{border-color:var(--gold-soft); color:var(--gold);}
+  .progression-list{
+    position:absolute; top:calc(100% + 6px); right:0; z-index:20; min-width:300px;
+    background:var(--bg-panel-2); border:1px solid var(--wood-line); border-radius:8px;
+    box-shadow:var(--shadow); padding:6px; max-height:360px; overflow-y:auto;
+  }
+  .progression-item{
+    display:flex; align-items:baseline; gap:10px; padding:8px 10px; border-radius:5px; cursor:pointer;
+  }
+  .progression-item:hover{background:var(--bg-panel-3);}
+  .progression-item .pnum{
+    font-family:'PT Sans Bold Embedded', Arial, sans-serif, 'PT Mono',monospace; color:var(--gold);
+    font-weight:700; font-size:13px; flex:none; width:16px;
+  }
+  .progression-item .pname{color:var(--text); font-size:13.5px; flex:none;}
+  .progression-item .pdegrees{
+    color:var(--text-faint); font-family:'PT Sans Bold Embedded', Arial, sans-serif, 'PT Mono',monospace; font-size:12px; margin-left:auto;
+  }
   .builder-kbd-indicator b{color:var(--gold);}
   .builder-kbd-hint{color:var(--text-faint); font-size:12.5px; margin-bottom:14px; line-height:1.6;}
   .seq-strip{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:18px; width:100%;}
@@ -346,6 +374,10 @@
       <button data-view="progress">Прогресс</button>
     </nav>
     <div class="builder-toolbar" id="builderToolbar" style="display:none;">
+      <div class="progression-dropdown" id="progressionDropdown">
+        <button class="btn progression-btn" id="progressionBtn">Последовательности <span class="arrow">▾</span></button>
+        <div class="progression-list" id="progressionList" style="display:none;"></div>
+      </div>
       <select class="seq-length-select" id="seqLengthSelect">
         <option value="4">4</option>
         <option value="8">8</option>
@@ -379,10 +411,6 @@
 
   <!-- ================= BUILDER ================= -->
   <section class="view" id="view-builder">
-    <div class="builder-kbd-hint">
-      Клавиатура: <b>1–6</b> — добавить аккорд ступени · <b>Q</b> трезвучие (маж/мин) · <b>W</b> sus2 · <b>E</b> sus4 · <b>R</b> септаккорд ·
-      <b>A/S/D/F/G</b> — набор струн 1–5 (работает независимо от раскладки клавиатуры).
-    </div>
     <div class="seq-strip" id="seqStrip"></div>
   </section>
 
@@ -1360,6 +1388,115 @@
       });
     });
   }
+
+  /* ============================================================
+     POPULAR PROGRESSIONS DROPDOWN
+     ------------------------------------------------------------
+     Чтобы добавить/изменить/удалить последовательность — редактируйте
+     массив PROGRESSIONS ниже. Каждая запись:
+       { name: "название", degrees: [ступени 1-6] }
+     Ступени — это номера ступеней диатонического лада (как на клавишах
+     1-6 в конструкторе): 1=I, 2=ii, 3=iii, 4=IV, 5=V, 6=vi.
+     Аккорды берутся трезвучиями (мажор/минор — как задано самим ладом),
+     набор струн — тот, что выбран как текущий (A/S/D/F/G, по умолчанию
+     первый сверху). Порядок в массиве = номер в выпадашке (1,2,3…).
+     ============================================================ */
+  const PROGRESSIONS = [
+    { name:"Поп-квадрат",        degrees:[1,5,6,4] },   // I–V–vi–IV
+    { name:"Классический круг",  degrees:[1,4,5,1] },   // I–IV–V–I
+    { name:"Баллада",            degrees:[6,4,1,5] },   // vi–IV–I–V
+    { name:"Кэнон",              degrees:[1,5,6,3,4,1,4,5] }, // I–V–vi–iii–IV–I–IV–V
+    { name:"50-е",               degrees:[1,6,4,5] },   // I–vi–IV–V
+    { name:"Блюзовый ход",       degrees:[1,4,6,5] },   // I–IV–vi–V
+    { name:"Джазовый ii-V-I",    degrees:[2,5,1] },      // ii–V–I
+    { name:"Джазовый круг",      degrees:[1,6,2,5] },   // I–vi–ii–V
+    { name:"Минорный ход",       degrees:[6,3,4,1] },   // vi–iii–IV–I
+    { name:"Плагальный",         degrees:[4,1,4,5] },   // IV–I–IV–V
+  ];
+  const ROMAN_BY_DEGREE = {1:"I",2:"ii",3:"iii",4:"IV",5:"V",6:"vi"};
+
+  const progressionBtn = document.getElementById('progressionBtn');
+  const progressionList = document.getElementById('progressionList');
+  const progressionDropdown = document.getElementById('progressionDropdown');
+  state.progressionOpen = false;
+
+  function renderProgressionList(){
+    progressionList.innerHTML = PROGRESSIONS.map((p,i)=>`
+      <div class="progression-item" data-prog="${i}">
+        <span class="pnum">${i+1}</span>
+        <span class="pname">${p.name}</span>
+        <span class="pdegrees">${p.degrees.map(d=>ROMAN_BY_DEGREE[d]).join('–')}</span>
+      </div>
+    `).join("");
+    progressionList.querySelectorAll('[data-prog]').forEach(item=>{
+      item.addEventListener('click', ()=>{
+        applyProgression(+item.dataset.prog);
+        closeProgressionDropdown();
+      });
+    });
+  }
+
+  function applyProgression(idx){
+    const prog = PROGRESSIONS[idx];
+    if(!prog) return;
+    const ids = prog.degrees.map(deg=>{
+      const root = ROOTS[deg-1];
+      if(!root) return null;
+      const quality = ROOT_META[root].triad;
+      const positions = positionsFor(chordKey(root, quality));
+      if(!positions.length) return null;
+      const pos = positions[Math.min(state.builderStringSet, positions.length-1)];
+      return pos ? pos.id : null;
+    });
+    state.sequence = ids;
+    state.seqLength = ids.length;
+    state.builderFillIndex = ids.length;
+    renderBuilder();
+  }
+
+  function openProgressionDropdown(){
+    if(state.progressionOpen) return;
+    renderProgressionList();
+    state.progressionOpen = true;
+    progressionList.style.display = 'block';
+    progressionBtn.classList.add('active');
+  }
+  function closeProgressionDropdown(){
+    state.progressionOpen = false;
+    progressionList.style.display = 'none';
+    progressionBtn.classList.remove('active');
+  }
+
+  progressionBtn.addEventListener('click', ()=>{
+    if(state.progressionOpen) closeProgressionDropdown();
+    else openProgressionDropdown();
+  });
+  // прокрутка колеса вниз в любом месте страницы (пока открыта вкладка
+  // «Конструктор» и выпадашка ещё закрыта) — открывает список
+  document.addEventListener('wheel', (e)=>{
+    if(state.progressionOpen) return;
+    if(progressionDropdown.offsetParent===null) return; // вкладка конструктора сейчас не активна
+    if(e.deltaY>0){
+      e.preventDefault();
+      openProgressionDropdown();
+    }
+  }, {passive:false});
+  document.addEventListener('click', (e)=>{
+    if(!state.progressionOpen) return;
+    if(!progressionDropdown.contains(e.target)) closeProgressionDropdown();
+  });
+  // capture phase — перехватывает цифры/любые клавиши раньше остальных
+  // обработчиков клавиатуры конструктора, пока выпадашка открыта
+  document.addEventListener('keydown', (e)=>{
+    if(!state.progressionOpen) return;
+    if(e.key>='1' && e.key<='9' && +e.key<=PROGRESSIONS.length){
+      e.preventDefault(); e.stopPropagation();
+      applyProgression(+e.key - 1);
+      closeProgressionDropdown();
+    } else {
+      closeProgressionDropdown();
+    }
+  }, true);
 
   /* ---- клавиатурный ввод в конструкторе ----
      1-6            — добавить аккорд ступени (по текущему режиму качества и набору струн) в следующую ячейку
