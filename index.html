@@ -1397,25 +1397,142 @@
     if(!el) return;
     el.innerHTML = `режим: <b>${BUILDER_MODE_LABEL[state.builderMode]}</b> · набор струн: <b>${state.builderStringSet+1}</b>`;
   }
+  /* ---- зажатый Space: редактирует ПОСЛЕДНИЙ (крайний заполненный) аккорд
+     в цепочке "на месте", вместо добавления нового / смены режима на будущее.
+     Space+1..6  — меняет корень последнего аккорда, сохраняя его текущее
+                    качество (трезвучие/sus2/sus4/септаккорд) и текущий набор струн.
+     Space+Q/W/E/R — меняет качество последнего аккорда, сохраняя его корень
+                    и текущий набор струн.
+     Space+A/S/D/F/G — меняет набор струн последнего аккорда, сохраняя его
+                    корень и качество.
+     Если для новой комбинации корень/качество/набор струн аппликатуры нет —
+     ничего не меняется. */
+  let spaceHeld = false;
+  function isTypingTarget(){
+    const tag = document.activeElement && document.activeElement.tagName;
+    return tag==='SELECT' || tag==='INPUT' || tag==='TEXTAREA';
+  }
+  document.addEventListener('keydown', (e)=>{
+    if(e.code==='Space' && !isTypingTarget()){
+      // пробел никогда не должен скролить страницу
+      e.preventDefault();
+      spaceHeld = true;
+    }
+  });
+  document.addEventListener('keyup', (e)=>{
+    if(e.code==='Space') spaceHeld = false;
+  });
+  window.addEventListener('blur', ()=>{ spaceHeld = false; });
+
+  // определяет "режим" (triad/sus2/sus4/seventh) по строке качества аккорда
+  function modeForQuality(quality){
+    if(quality==='sus2') return 'sus2';
+    if(quality==='sus4') return 'sus4';
+    if(quality==='dom7' || quality==='maj7' || quality==='min7') return 'seventh';
+    return 'triad';
+  }
+  function qualityForMode(mode, root){
+    if(mode==='sus2') return 'sus2';
+    if(mode==='sus4') return 'sus4';
+    if(mode==='seventh') return ROOT_SEVENTH[root];
+    return ROOT_META[root].triad;
+  }
+  function lastFilledSlotIndex(){
+    for(let i=state.sequence.length-1;i>=0;i--){
+      if(state.sequence[i]) return i;
+    }
+    return -1;
+  }
+  // индекс набора струн текущей позиции внутри списка аппликатур ЕЁ аккорда
+  function stringSetIndexOf(pos){
+    return positionsFor(pos.chord).findIndex(p=>p.id===pos.id);
+  }
+  function editLastChordRoot(rootIndex){
+    const idx = lastFilledSlotIndex();
+    if(idx<0) return;
+    const root = ROOTS[rootIndex-1];
+    if(!root) return;
+    const curPos = byId(state.sequence[idx]);
+    const curMeta = CHORD_META[curPos.chord];
+    const mode = modeForQuality(curMeta.quality);
+    const quality = qualityForMode(mode, root);
+    const positions = positionsFor(chordKey(root, quality));
+    const newPos = positions[stringSetIndexOf(curPos)];
+    if(!newPos) return;
+    state.sequence[idx] = newPos.id;
+    renderBuilder();
+  }
+  function editLastChordMode(mode){
+    const idx = lastFilledSlotIndex();
+    if(idx<0) return;
+    const curPos = byId(state.sequence[idx]);
+    const curMeta = CHORD_META[curPos.chord];
+    const root = curMeta.root;
+    const quality = qualityForMode(mode, root);
+    const positions = positionsFor(chordKey(root, quality));
+    const newPos = positions[stringSetIndexOf(curPos)];
+    if(!newPos) return;
+    state.sequence[idx] = newPos.id;
+    renderBuilder();
+  }
+  function editLastChordStringSet(stringSetIndex){
+    const idx = lastFilledSlotIndex();
+    if(idx<0) return;
+    const curPos = byId(state.sequence[idx]);
+    const positions = positionsFor(curPos.chord);
+    const newPos = positions[stringSetIndex];
+    if(!newPos) return;
+    state.sequence[idx] = newPos.id;
+    renderBuilder();
+  }
+
   document.addEventListener('keydown', (e)=>{
     if(!document.getElementById('view-builder').classList.contains('active')) return;
-    const tag = document.activeElement && document.activeElement.tagName;
-    if(tag==='SELECT' || tag==='INPUT' || tag==='TEXTAREA') return;
+    if(isTypingTarget()) return;
+    if(e.code==='Space') return; // обработано отдельным глобальным слушателем выше
     if(e.key>='1' && e.key<='6'){
-      addBuilderChordByDegree(+e.key);
+      if(spaceHeld) editLastChordRoot(+e.key);
+      else addBuilderChordByDegree(+e.key);
       e.preventDefault();
       return;
     }
     switch(e.code){
-      case 'KeyQ': state.builderMode='triad'; updateBuilderKbdIndicator(); e.preventDefault(); break;
-      case 'KeyW': state.builderMode='sus2'; updateBuilderKbdIndicator(); e.preventDefault(); break;
-      case 'KeyE': state.builderMode='sus4'; updateBuilderKbdIndicator(); e.preventDefault(); break;
-      case 'KeyR': state.builderMode='seventh'; updateBuilderKbdIndicator(); e.preventDefault(); break;
-      case 'KeyA': state.builderStringSet=0; updateBuilderKbdIndicator(); e.preventDefault(); break;
-      case 'KeyS': state.builderStringSet=1; updateBuilderKbdIndicator(); e.preventDefault(); break;
-      case 'KeyD': state.builderStringSet=2; updateBuilderKbdIndicator(); e.preventDefault(); break;
-      case 'KeyF': state.builderStringSet=3; updateBuilderKbdIndicator(); e.preventDefault(); break;
-      case 'KeyG': state.builderStringSet=4; updateBuilderKbdIndicator(); e.preventDefault(); break;
+      case 'KeyQ':
+        if(spaceHeld) editLastChordMode('triad');
+        else { state.builderMode='triad'; updateBuilderKbdIndicator(); }
+        e.preventDefault(); break;
+      case 'KeyW':
+        if(spaceHeld) editLastChordMode('sus2');
+        else { state.builderMode='sus2'; updateBuilderKbdIndicator(); }
+        e.preventDefault(); break;
+      case 'KeyE':
+        if(spaceHeld) editLastChordMode('sus4');
+        else { state.builderMode='sus4'; updateBuilderKbdIndicator(); }
+        e.preventDefault(); break;
+      case 'KeyR':
+        if(spaceHeld) editLastChordMode('seventh');
+        else { state.builderMode='seventh'; updateBuilderKbdIndicator(); }
+        e.preventDefault(); break;
+      case 'KeyA':
+        if(spaceHeld) editLastChordStringSet(0);
+        else { state.builderStringSet=0; updateBuilderKbdIndicator(); }
+        e.preventDefault(); break;
+      case 'KeyS':
+        if(spaceHeld) editLastChordStringSet(1);
+        else { state.builderStringSet=1; updateBuilderKbdIndicator(); }
+        e.preventDefault(); break;
+      case 'KeyD':
+        if(spaceHeld) editLastChordStringSet(2);
+        else { state.builderStringSet=2; updateBuilderKbdIndicator(); }
+        e.preventDefault(); break;
+      case 'KeyF':
+        if(spaceHeld) editLastChordStringSet(3);
+        else { state.builderStringSet=3; updateBuilderKbdIndicator(); }
+        e.preventDefault(); break;
+      case 'KeyG':
+        if(spaceHeld) editLastChordStringSet(4);
+        else { state.builderStringSet=4; updateBuilderKbdIndicator(); }
+        e.preventDefault(); break;
     }
   });
 
