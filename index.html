@@ -151,7 +151,21 @@
   .trainer-grid{display:flex; justify-content:center; align-items:stretch; gap:28px; flex-wrap:wrap;}
   @media (max-width: 900px){ .trainer-grid{flex-direction:column; align-items:center;} }
 
-  .diagram-card{display:flex; flex-direction:column; align-items:center; gap:12px; flex:none; padding:40px 60px !important;}
+  .diagram-card{display:flex; flex-direction:column; align-items:center; gap:12px; flex:none; padding:40px 60px !important; position:relative;}
+  .quiz-result-badge{
+    position:absolute; top:14px; right:14px; width:26px; height:26px; border-radius:50%;
+    display:none; box-sizing:border-box;
+  }
+  .quiz-result-badge.show{display:block;}
+  .quiz-result-badge.correct{
+    background:var(--marker-open-fill); border:2px solid var(--string-open-glow);
+    filter: drop-shadow(0 0 6px var(--string-open-glow));
+  }
+  .quiz-result-badge.wrong{
+    background:var(--marker-cov-fill); border:2px solid var(--string-cov-glow);
+    filter: drop-shadow(0 0 6px var(--string-cov-glow));
+  }
+  .quiz-next-btn{position:absolute; top:48px; right:14px; display:none;}
   .diagram-card svg{display:block; width:800px; height:650px; max-width:none;}
   @media (max-width: 900px){
     .diagram-card{padding:20px 16px !important;}
@@ -167,6 +181,8 @@
      edge, letting the picker block above absorb the extra space */
   .right-column .info-card{width:100%; margin-top:auto;}
   @media (max-width: 900px){ .right-column{width:100%; max-width:560px;} .right-column .info-card{margin-top:0;} }
+
+
 
   /* keep the picker block a constant height no matter how many pills/chips
      the current root/quality produces, so switching chords never reflows
@@ -247,14 +263,34 @@
   .quiz-controls{display:flex; gap:8px; flex-wrap:wrap;}
 
   /* ---- sequence builder ---- */
-  .seq-strip{display:grid; grid-template-columns:repeat(8,1fr); gap:10px; margin-bottom:18px;}
-  @media (max-width:900px){ .seq-strip{grid-template-columns:repeat(4,1fr);} }
-  @media (max-width:520px){ .seq-strip{grid-template-columns:repeat(2,1fr);} }
-  .seq-slot{background:var(--bg-panel-2); border:1px solid var(--wood-line); border-radius:8px; padding:8px; text-align:center;}
-  .seq-slot .num{font-family:'PT Sans Bold Embedded', Arial, sans-serif, 'PT Mono',monospace; font-size:11px; color:var(--text-faint);}
-  .seq-slot select{width:100%; margin-top:6px; background:var(--bg-panel-3); color:var(--text); border:1px solid var(--wood-line); border-radius:5px; padding:4px; font-size:12px; font-family:'PT Sans Bold Embedded', Arial, sans-serif, 'PT Sans',sans-serif;}
-  .seq-slot svg{width:100%; height:70px; margin-top:6px;}
-  .seq-slot .lbl{font-size:11.5px; color:var(--text-dim); margin-top:4px; min-height:14px;}
+  /* the builder view breaks out of .wrap's 1320px cap so its card grid
+     genuinely fills the whole browser width on wide/ultrawide screens
+     instead of stalling at the same width as the other tabs */
+  #view-builder{
+    max-width:none;
+    width:100vw;
+    position:relative;
+    left:50%;
+    transform:translateX(-50%);
+    padding:0 20px;
+  }
+  .builder-toolbar{display:flex; align-items:center; justify-content:flex-end; gap:8px; flex-wrap:wrap;}
+  .seq-length-select{
+    background:var(--bg-panel-2); color:var(--text); border:1px solid var(--wood-line); border-radius:6px;
+    padding:9px 12px; font-size:14px; font-family:'PT Sans Bold Embedded', Arial, sans-serif, 'PT Sans',sans-serif;
+    cursor:pointer;
+  }
+  .seq-length-select:hover{border-color:var(--gold-soft);}
+  .builder-kbd-indicator{color:var(--text-dim); font-family:'PT Sans Bold Embedded', Arial, sans-serif, 'PT Mono',monospace; font-size:12.5px; display:flex; align-items:center; gap:4px;}
+  .builder-kbd-indicator b{color:var(--gold);}
+  .builder-kbd-hint{color:var(--text-faint); font-size:12.5px; margin-bottom:14px; line-height:1.6;}
+  .seq-strip{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:18px; width:100%;}
+  @media (max-width:1100px){ .seq-strip{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:560px){ .seq-strip{grid-template-columns:repeat(1,1fr);} }
+  .seq-slot{background:var(--bg-panel-2); border:1px solid var(--wood-line); border-radius:10px; padding:14px; text-align:center; width:100%;}
+  .seq-slot .num{font-family:'PT Serif', serif; font-size:18px; font-weight:700; color:var(--gold); letter-spacing:.02em;}
+  .seq-slot select{width:100%; margin-top:8px; background:var(--bg-panel-3); color:var(--text); border:1px solid var(--wood-line); border-radius:5px; padding:6px; font-size:13px; font-family:'PT Sans Bold Embedded', Arial, sans-serif, 'PT Sans',sans-serif; white-space:nowrap;}
+  .seq-slot svg{width:100%; height:auto; aspect-ratio: 800 / 650; margin-top:12px; display:block;}
   .seq-slot.playing{border-color:var(--gold); box-shadow:0 0 0 2px rgba(207,166,78,.35);}
 
   .seq-controls{display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:10px;}
@@ -304,11 +340,24 @@
   <div class="tabs-row">
     <nav class="tabs">
       <button data-view="trainer" class="active">Тренажёр</button>
+      <button data-view="quiz">Тренировка аккордов</button>
       <button data-view="builder">Конструктор</button>
-      <button data-view="quiz">Угадай‑ка</button>
       <button data-view="table">Таблица</button>
       <button data-view="progress">Прогресс</button>
     </nav>
+    <div class="builder-toolbar" id="builderToolbar" style="display:none;">
+      <select class="seq-length-select" id="seqLengthSelect">
+        <option value="4">4</option>
+        <option value="8">8</option>
+        <option value="16">16</option>
+        <option value="32">32</option>
+        <option value="64">64</option>
+        <option value="128">128</option>
+      </select>
+      <button class="btn" id="seqClear">Очистить</button>
+      <button class="btn" id="seqRandom">Случайная последовательность</button>
+      <span class="builder-kbd-indicator" id="builderKbdIndicator"></span>
+    </div>
   </div>
 
   <!-- ================= TRAINER ================= -->
@@ -330,27 +379,35 @@
 
   <!-- ================= BUILDER ================= -->
   <section class="view" id="view-builder">
-    <p style="color:var(--text-faint); font-size:13.5px; margin-top:0 0 16px;">Соберите последовательность из 8 аккордов. Над каждой ступенью — своя схема струн для гуслей.</p>
-    <div class="seq-strip" id="seqStrip"></div>
-    <div class="seq-controls">
-      <button class="btn" id="seqClear">Очистить</button>
-      <button class="btn" id="seqRandom">Случайная последовательность</button>
+    <div class="builder-kbd-hint">
+      Клавиатура: <b>1–6</b> — добавить аккорд ступени · <b>Q</b> трезвучие (маж/мин) · <b>W</b> sus2 · <b>E</b> sus4 · <b>R</b> септаккорд ·
+      <b>A/S/D/F/G</b> — набор струн 1–5 (работает независимо от раскладки клавиатуры).
     </div>
+    <div class="seq-strip" id="seqStrip"></div>
   </section>
 
   <!-- ================= QUIZ ================= -->
   <section class="view" id="view-quiz">
-    <p style="color:var(--text-faint); font-size:13.5px; margin:0 0 16px;">Аккорд скрыт. Определите его по положению рук, затем нажмите «Показать ответ».</p>
-    <div class="quiz-controls" id="quizControls" style="display:flex;">
-      <button class="btn" id="quizReveal">Показать ответ</button>
-      <button class="btn" id="quizKnow">Знаю →</button>
-      <button class="btn" id="quizRepeat">Ещё учу →</button>
-    </div>
     <div class="trainer-grid">
       <div class="card diagram-card">
+        <div class="quiz-result-badge" id="quizResultBadge"></div>
+        <button class="btn quiz-next-btn" id="quizNextBtn" style="display:none;">Далее</button>
         <svg id="quizSvg" viewBox="0 0 800 650" xmlns="http://www.w3.org/2000/svg"></svg>
       </div>
-      <div class="card info-card" id="quizInfoCard"></div>
+      <div class="right-column">
+        <div class="card">
+          <div class="settings-label" style="margin-bottom:10px;">Выберите аккорды и струны</div>
+          <div class="pill-row" id="quizPoolRoots"></div>
+          <div class="pill-row" id="quizPoolQualities"></div>
+          <div class="chip-row" id="quizPoolStrings" style="margin-bottom:0;"></div>
+        </div>
+        <div class="card">
+          <div class="settings-label" style="margin-bottom:10px;">Выберите ответ</div>
+          <div class="pill-row" id="quizAnswerNotes"></div>
+          <div class="pill-row" id="quizAnswerQualities"></div>
+          <div class="chip-row" id="quizAnswerStrings" style="margin-bottom:0;"></div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -600,9 +657,20 @@
     tableSort: {key:"topString", dir:"desc"},
     tableFilter: new Set(CHORD_ORDER),
     tableOnlyUnlearned: false,
-    sequence: new Array(8).fill(null),
+    seqLength: 4,
+    sequence: new Array(4).fill(null),
+    builderMode: 'triad',     // 'triad' | 'sus2' | 'sus4' | 'seventh' — качество аккорда для клавиш 1-6
+    builderStringSet: 0,      // 0..4 — выбранный набор струн (позиция в positionsFor, отсортированной сверху вниз)
+    builderFillIndex: 0,      // индекс следующей ячейки конструктора, куда попадёт аккорд по клавише 1-6
     quizId: null,
     quizRevealed: false,
+    quizPoolRoots: new Set(["A"]),       // ноты, участвующие в тренировке — по умолчанию A
+    quizPoolQualities: new Set(["maj"]), // типы аккордов — по умолчанию мажор
+    quizPoolStrings: new Set(),          // наборы струн; заполняется автоматически под выбранные аккорды
+    quizAnsRoot: null,
+    quizAnsQuality: null,
+    quizAnsString: null,
+    quizResult: null,            // null | 'correct' | 'wrong'
     // visual settings
     notePos: 'left',       // 'left' | 'right' — where note-name labels are drawn
     markerPos: 'left',     // 'left' | 'right' — where the ring markers sit on the strings
@@ -691,7 +759,7 @@
       const isCov = pos.covered.includes(s);
       const col = stringColor(s,pos,hide);
       const strFilter = hide ? "none" : (isOpen ? "var(--string-open-filter)" : (isCov ? "var(--string-cov-filter)" : "none"));
-      const w = involved && !hide ? 3 : 2;
+      const w = involved && !hide ? 5 : 2;
       strings += `<line x1="${leftX}" y1="${y}" x2="${rightX}" y2="${y}" stroke="${col}" stroke-width="${w}" stroke-linecap="round" opacity="${involved?1:0.4}" style="filter:${strFilter}"/>`;
 
       // colored label logic — matches reference: neutral gray by default,
@@ -708,11 +776,11 @@
 
       // note position: left or right of the strings, per state.notePos
       if(state.notePos === 'left'){
-        noteLabels += `<text x="${leftX-20}" y="${y+4}" text-anchor="end" font-family="'PT Sans Bold Embedded', Arial, sans-serif, PT Mono, monospace" font-size="13" fill="${noteCol}" style="filter:${noteFilter}">${noteText}</text>`;
-        labels += `<text x="${rightX+18}" y="${y+4}" text-anchor="start" font-family="'PT Sans Bold Embedded', Arial, sans-serif, PT Mono, monospace" font-size="13" fill="${stringNumCol}" style="filter:${stringNumFilter}">${s}</text>`;
+        noteLabels += `<text x="${leftX-20}" y="${y+4}" text-anchor="end" font-family="'PT Sans Bold Embedded', Arial, sans-serif, PT Mono, monospace" font-size="20" fill="${noteCol}" style="filter:${noteFilter}">${noteText}</text>`;
+        labels += `<text x="${rightX+18}" y="${y+4}" text-anchor="start" font-family="'PT Sans Bold Embedded', Arial, sans-serif, PT Mono, monospace" font-size="20" fill="${stringNumCol}" style="filter:${stringNumFilter}">${s}</text>`;
       } else {
-        labels += `<text x="${leftX-20}" y="${y+4}" text-anchor="end" font-family="'PT Sans Bold Embedded', Arial, sans-serif, PT Mono, monospace" font-size="13" fill="${stringNumCol}" style="filter:${stringNumFilter}">${s}</text>`;
-        noteLabels += `<text x="${rightX+18}" y="${y+4}" text-anchor="start" font-family="'PT Sans Bold Embedded', Arial, sans-serif, PT Mono, monospace" font-size="13" fill="${noteCol}" style="filter:${noteFilter}">${noteText}</text>`;
+        labels += `<text x="${leftX-20}" y="${y+4}" text-anchor="end" font-family="'PT Sans Bold Embedded', Arial, sans-serif, PT Mono, monospace" font-size="20" fill="${stringNumCol}" style="filter:${stringNumFilter}">${s}</text>`;
+        noteLabels += `<text x="${rightX+18}" y="${y+4}" text-anchor="start" font-family="'PT Sans Bold Embedded', Arial, sans-serif, PT Mono, monospace" font-size="20" fill="${noteCol}" style="filter:${noteFilter}">${noteText}</text>`;
       }
 
       // marker circle: filled + outlined, matching reference marker-green/marker-red exactly
@@ -731,20 +799,6 @@
       }
     }
     return `${strings}${markers}${labels}${noteLabels}`;
-  }
-
-  function miniSVG(pos){
-    if(!pos) return `<line x1="10" y1="35" x2="110" y2="35" stroke="var(--wood-line)" stroke-width="1"/>`;
-    const H=70,W=120, top=8, bot=62;
-    let out="";
-    for(let s=1;s<=15;s++){
-      const y = top + (bot-top)*((s-1)/14);
-      const involved = pos.open.includes(s) || pos.covered.includes(s);
-      if(!involved) continue;
-      const col = pos.open.includes(s) ? "var(--string-open)" : "var(--string-cov)";
-      out += `<line x1="10" y1="${y}" x2="110" y2="${y}" stroke="${col}" stroke-width="3" stroke-linecap="round"/>`;
-    }
-    return out;
   }
 
   /* ============================================================
@@ -1008,55 +1062,218 @@
   }
 
   /* ============================================================
-     QUIZ TAB (угадай‑ка)
+     QUIZ TAB (тренировка аккордов)
      ============================================================ */
   const quizSvg = document.getElementById('quizSvg');
-  const quizInfoCard = document.getElementById('quizInfoCard');
+  const quizResultBadge = document.getElementById('quizResultBadge');
+  const quizNextBtn = document.getElementById('quizNextBtn');
+  const quizPoolRootsEl = document.getElementById('quizPoolRoots');
+  const quizPoolQualitiesEl = document.getElementById('quizPoolQualities');
+  const quizPoolStringsEl = document.getElementById('quizPoolStrings');
+  const quizAnswerNotesEl = document.getElementById('quizAnswerNotes');
+  const quizAnswerQualitiesEl = document.getElementById('quizAnswerQualities');
+  const quizAnswerStringsEl = document.getElementById('quizAnswerStrings');
 
-  function pickRandomQuiz(){
-    const idx = Math.floor(Math.random()*DATA.length);
-    state.quizId = DATA[idx].id;
-    state.quizRevealed = false;
+  const QUALITY_SHORT = { maj:"мажор", min:"минор", sus2:"sus2", sus4:"sus4", dom7:"7", maj7:"maj7", min7:"m7" };
+  const ALL_STRINGS = Array.from({length:15}, (_,i)=>15-i); // 15 → 1, сверху вниз как на диаграмме
+
+  // аккорды, получающиеся из выбранных нот × выбранных типов аккордов
+  // (несуществующие комбинации, например A_min, просто пропускаются)
+  function selectedPoolChords(){
+    const chords = [];
+    state.quizPoolRoots.forEach(root=>{
+      state.quizPoolQualities.forEach(q=>{
+        const key = chordKey(root, q);
+        if(CHORD_META[key] && !chords.includes(key)) chords.push(key);
+      });
+    });
+    return chords;
   }
 
-  function renderQuiz(){
-    if(!state.quizId) pickRandomQuiz();
+  // наборы струн (topString), реально существующие у выбранных аккордов
+  function availablePoolStrings(){
+    const chords = selectedPoolChords();
+    const set = new Set();
+    DATA.forEach(d=>{ if(chords.includes(d.chord)) set.add(d.topString); });
+    return Array.from(set).sort((a,b)=>b-a);
+  }
+
+  // гарантируем: минимум одна нота, один тип аккорда, один набор струн выбраны всегда,
+  // и что выбранные струны реально относятся к выбранным аккордам
+  function ensurePoolValid(){
+    if(state.quizPoolRoots.size===0) state.quizPoolRoots.add("A");
+    if(state.quizPoolQualities.size===0) state.quizPoolQualities.add("maj");
+    const avail = availablePoolStrings();
+    Array.from(state.quizPoolStrings).forEach(s=>{
+      if(!avail.includes(s)) state.quizPoolStrings.delete(s);
+    });
+    if(state.quizPoolStrings.size===0){
+      avail.forEach(s=>state.quizPoolStrings.add(s));
+    }
+  }
+
+  function quizPool(){
+    const chords = selectedPoolChords();
+    let rows = DATA.filter(d=> chords.includes(d.chord) && state.quizPoolStrings.has(d.topString));
+    return rows.length ? rows : DATA;
+  }
+
+  function pickNextQuizQuestion(){
+    const pool = quizPool();
+    let idx = Math.floor(Math.random()*pool.length);
+    // избегаем повторения того же вопроса подряд, если есть выбор
+    if(pool.length>1 && pool[idx].id===state.quizId){
+      idx = (idx+1) % pool.length;
+    }
+    state.quizId = pool[idx].id;
+    state.quizAnsRoot = null;
+    state.quizAnsQuality = null;
+    state.quizAnsString = null;
+    state.quizResult = null;
+  }
+
+  function renderQuizPoolFilters(){
+    ensurePoolValid();
+
+    // ноты — мультивыбор, минимум одна всегда должна остаться выбранной
+    quizPoolRootsEl.innerHTML = ROOTS.map(root=>{
+      const active = state.quizPoolRoots.has(root) ? "active" : "";
+      return `<button class="pill ${active}" data-root="${root}"><span class="roman">${ROOT_META[root].roman} ·</span> ${root}</button>`;
+    }).join("");
+    quizPoolRootsEl.querySelectorAll('.pill').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const root = btn.dataset.root;
+        if(state.quizPoolRoots.has(root)){
+          if(state.quizPoolRoots.size>1) state.quizPoolRoots.delete(root);
+        } else {
+          state.quizPoolRoots.add(root);
+        }
+        ensurePoolValid();
+        pickNextQuizQuestion();
+        renderQuiz();
+      });
+    });
+
+    // типы аккордов — мультивыбор, минимум один всегда должен остаться выбранным
+    quizPoolQualitiesEl.innerHTML = QUALITY_ORDER.map(q=>{
+      const active = state.quizPoolQualities.has(q) ? "active" : "";
+      return `<button class="pill ${active}" data-quality="${q}">${QUALITY_SHORT[q]}</button>`;
+    }).join("");
+    quizPoolQualitiesEl.querySelectorAll('.pill').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const q = btn.dataset.quality;
+        if(state.quizPoolQualities.has(q)){
+          if(state.quizPoolQualities.size>1) state.quizPoolQualities.delete(q);
+        } else {
+          state.quizPoolQualities.add(q);
+        }
+        ensurePoolValid();
+        pickNextQuizQuestion();
+        renderQuiz();
+      });
+    });
+
+    // наборы струн — только те, что реально существуют у выбранных аккордов;
+    // мультивыбор, минимум один всегда должен остаться выбранным
+    const avail = availablePoolStrings();
+    quizPoolStringsEl.innerHTML = avail.map(s=>{
+      const active = state.quizPoolStrings.has(s) ? "active" : "";
+      return `<button class="chip ${active}" data-string="${s}">${s}</button>`;
+    }).join("");
+    quizPoolStringsEl.querySelectorAll('.chip').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const s = Number(btn.dataset.string);
+        if(state.quizPoolStrings.has(s)){
+          if(state.quizPoolStrings.size>1) state.quizPoolStrings.delete(s);
+        } else {
+          state.quizPoolStrings.add(s);
+        }
+        ensurePoolValid();
+        pickNextQuizQuestion();
+        renderQuiz();
+      });
+    });
+  }
+
+  function renderQuizAnswerPickers(){
+    const locked = state.quizResult==='wrong'; // после ошибки ждём нажатия «Далее»
+
+    quizAnswerNotesEl.innerHTML = ROOTS.map(root=>{
+      const active = state.quizAnsRoot===root ? "active" : "";
+      return `<button class="pill ${active}" data-root="${root}" ${locked?"disabled":""}>${root}</button>`;
+    }).join("");
+    quizAnswerNotesEl.querySelectorAll('.pill').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        state.quizAnsRoot = btn.dataset.root;
+        checkQuizAnswer();
+      });
+    });
+
+    quizAnswerQualitiesEl.innerHTML = QUALITY_ORDER.map(q=>{
+      const active = state.quizAnsQuality===q ? "active" : "";
+      return `<button class="pill ${active}" data-quality="${q}" ${locked?"disabled":""}>${QUALITY_SHORT[q]}</button>`;
+    }).join("");
+    quizAnswerQualitiesEl.querySelectorAll('.pill').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        state.quizAnsQuality = btn.dataset.quality;
+        checkQuizAnswer();
+      });
+    });
+
+    quizAnswerStringsEl.innerHTML = ALL_STRINGS.map(s=>{
+      const active = state.quizAnsString===s ? "active" : "";
+      return `<button class="chip ${active}" data-string="${s}" ${locked?"disabled":""}>${s}</button>`;
+    }).join("");
+    quizAnswerStringsEl.querySelectorAll('.chip').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        state.quizAnsString = Number(btn.dataset.string);
+        checkQuizAnswer();
+      });
+    });
+  }
+
+  function renderQuizBadge(){
+    quizResultBadge.className = 'quiz-result-badge';
+    quizNextBtn.style.display = 'none';
+    if(state.quizResult==='correct'){
+      quizResultBadge.classList.add('show','correct');
+    } else if(state.quizResult==='wrong'){
+      quizResultBadge.classList.add('show','wrong');
+      quizNextBtn.style.display = 'block';
+    }
+  }
+
+  function checkQuizAnswer(){
+    renderQuizAnswerPickers();
+    if(state.quizAnsRoot===null || state.quizAnsQuality===null || state.quizAnsString===null) return;
     const pos = byId(state.quizId);
     const meta = CHORD_META[pos.chord];
-    const hide = !state.quizRevealed;
-    quizSvg.innerHTML = fanSVG(pos, hide);
-    if(hide){
-      quizInfoCard.innerHTML = `
-        <h2>?</h2>
-        <div class="letters">Определите аккорд по положению рук и нажмите «Показать ответ»</div>
-        <div class="info-line"><b>Верхняя струна</b><span>${pos.topString}</span></div>
-      `;
-      return;
+    const correct = meta.root===state.quizAnsRoot && meta.quality===state.quizAnsQuality && pos.topString===state.quizAnsString;
+    state.quizResult = correct ? 'correct' : 'wrong';
+    renderQuizBadge();
+    renderQuizAnswerPickers();
+    if(correct){
+      setTimeout(()=>{
+        pickNextQuizQuestion();
+        renderQuiz();
+      }, 700);
     }
-    quizInfoCard.innerHTML = `
-      <h2>${meta.roman} · ${meta.name}</h2>
-      <div class="letters">${meta.letters}</div>
-      <div class="info-line"><b>Открытые струны</b><span>${pos.open.join(', ')}</span></div>
-      <div class="info-line"><b>Прижатые струны</b><span>${pos.covered.join(', ')}</span></div>
-      <div class="info-line"><b>Ступень в A major</b><span>${pos.degAmaj}</span></div>
-      <div class="info-line"><b>Начиная сверху</b><span>${pos.topTone}</span></div>
-      <div class="info-line"><b>1‑я струна аккорда</b><span>${pos.topString}</span></div>
-      <div class="info-line"><b>Шифр позиции</b><span>${pos.start}</span></div>
-      ${pos.comment ? `<div class="comment-box">${pos.comment}</div>` : ""}
-    `;
   }
 
-  document.getElementById('quizReveal').addEventListener('click', ()=>{
-    state.quizRevealed = true; renderQuiz();
+  quizNextBtn.addEventListener('click', ()=>{
+    pickNextQuizQuestion();
+    renderQuiz();
   });
-  document.getElementById('quizKnow').addEventListener('click', ()=>{
-    state.learned.add(state.quizId); saveLearned();
-    pickRandomQuiz(); renderQuiz(); renderProgress();
-  });
-  document.getElementById('quizRepeat').addEventListener('click', ()=>{
-    state.learned.delete(state.quizId); saveLearned();
-    pickRandomQuiz(); renderQuiz(); renderProgress();
-  });
+
+  function renderQuiz(){
+    ensurePoolValid();
+    if(!state.quizId) pickNextQuizQuestion();
+    const pos = byId(state.quizId);
+    quizSvg.innerHTML = fanSVG(pos, false);
+    renderQuizPoolFilters();
+    renderQuizAnswerPickers();
+    renderQuizBadge();
+  }
 
   /* ============================================================
      TABS
@@ -1067,6 +1284,7 @@
       btn.classList.add('active');
       document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
       document.getElementById('view-'+btn.dataset.view).classList.add('active');
+      document.getElementById('builderToolbar').style.display = btn.dataset.view==='builder' ? 'flex' : 'none';
       if(btn.dataset.view==='table') renderTable();
       if(btn.dataset.view==='progress') renderProgress();
       if(btn.dataset.view==='builder') renderBuilder();
@@ -1084,6 +1302,7 @@
     document.querySelector('nav.tabs button[data-view="trainer"]').classList.add('active');
     document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
     document.getElementById('view-trainer').classList.add('active');
+    document.getElementById('builderToolbar').style.display = 'none';
     renderTrainer();
   }
 
@@ -1092,14 +1311,24 @@
      ============================================================ */
   const seqStrip = document.getElementById('seqStrip');
   function renderBuilder(){
+    const lenSelect = document.getElementById('seqLengthSelect');
+    if(![...lenSelect.options].some(o=>o.value===String(state.seqLength))){
+      const opt = document.createElement('option');
+      opt.value = String(state.seqLength);
+      opt.textContent = String(state.seqLength);
+      lenSelect.appendChild(opt);
+    }
+    lenSelect.value = String(state.seqLength);
+    updateBuilderKbdIndicator();
     seqStrip.innerHTML = state.sequence.map((id,i)=>{
       const pos = id ? byId(id) : null;
       const chordVal = pos ? pos.chord : "";
-      const posOptions = CHORD_ORDER.map(ck=>`<option value="${ck}" ${ck===chordVal?"selected":""}>${CHORD_META[ck].roman} ${CHORD_META[ck].name.split(' ')[0]}</option>`).join("");
+      const posOptions = CHORD_ORDER.map(ck=>`<option value="${ck}" ${ck===chordVal?"selected":""}>${CHORD_META[ck].roman} ${CHORD_META[ck].name}</option>`).join("");
       const variantOptions = pos ? positionsFor(pos.chord).map(p=>`<option value="${p.id}" ${p.id===id?"selected":""}>${Math.min(...p.open,...p.covered)}–${p.topString}</option>`).join("") : "";
+      const degree = pos ? CHORD_META[pos.chord].roman : "–";
       return `
         <div class="seq-slot" data-slot="${i}">
-          <div class="num">${i+1}</div>
+          <div class="num">${i+1}-${degree}</div>
           <select class="chordSel" data-slot="${i}">
             <option value="">—</option>
             ${posOptions}
@@ -1107,8 +1336,7 @@
           <select class="variantSel" data-slot="${i}" ${!pos?'style="display:none"':''}>
             ${variantOptions}
           </select>
-          <svg viewBox="0 0 120 70">${miniSVG(pos)}</svg>
-          <div class="lbl">${pos? CHORD_META[pos.chord].roman : ''}</div>
+          <svg viewBox="0 0 800 650">${pos ? fanSVG(pos, false) : ''}</svg>
         </div>
       `;
     }).join("");
@@ -1133,11 +1361,81 @@
     });
   }
 
+  /* ---- клавиатурный ввод в конструкторе ----
+     1-6            — добавить аккорд ступени (по текущему режиму качества и набору струн) в следующую ячейку
+     Q/W/E/R         — переключить режим качества: трезвучие(маж/мин) / sus2 / sus4 / септаккорд
+     A/S/D/F/G       — переключить набор струн 1..5 (позиция в списке аппликатур сверху вниз)
+     Раскладка клавиатуры не важна — распознаётся по физической клавише (event.code). */
+  const BUILDER_MODE_LABEL = { triad:"трезвучие", sus2:"sus2", sus4:"sus4", seventh:"септаккорд" };
+  function currentQualityForRoot(root){
+    if(state.builderMode==='sus2') return 'sus2';
+    if(state.builderMode==='sus4') return 'sus4';
+    if(state.builderMode==='seventh') return ROOT_SEVENTH[root];
+    return ROOT_META[root].triad;
+  }
+  function ensureBuilderCell(idx){
+    while(idx >= state.sequence.length){
+      state.sequence = state.sequence.concat(new Array(4).fill(null));
+      state.seqLength = state.sequence.length;
+    }
+  }
+  function addBuilderChordByDegree(rootIndex){
+    const root = ROOTS[rootIndex-1];
+    if(!root) return;
+    const quality = currentQualityForRoot(root);
+    const key = chordKey(root, quality);
+    const positions = positionsFor(key);
+    const pos = positions[state.builderStringSet];
+    if(!pos) return; // такого набора струн для этого аккорда нет — ничего не делаем
+    ensureBuilderCell(state.builderFillIndex);
+    state.sequence[state.builderFillIndex] = pos.id;
+    state.builderFillIndex++;
+    renderBuilder();
+  }
+  function updateBuilderKbdIndicator(){
+    const el = document.getElementById('builderKbdIndicator');
+    if(!el) return;
+    el.innerHTML = `режим: <b>${BUILDER_MODE_LABEL[state.builderMode]}</b> · набор струн: <b>${state.builderStringSet+1}</b>`;
+  }
+  document.addEventListener('keydown', (e)=>{
+    if(!document.getElementById('view-builder').classList.contains('active')) return;
+    const tag = document.activeElement && document.activeElement.tagName;
+    if(tag==='SELECT' || tag==='INPUT' || tag==='TEXTAREA') return;
+    if(e.key>='1' && e.key<='6'){
+      addBuilderChordByDegree(+e.key);
+      e.preventDefault();
+      return;
+    }
+    switch(e.code){
+      case 'KeyQ': state.builderMode='triad'; updateBuilderKbdIndicator(); e.preventDefault(); break;
+      case 'KeyW': state.builderMode='sus2'; updateBuilderKbdIndicator(); e.preventDefault(); break;
+      case 'KeyE': state.builderMode='sus4'; updateBuilderKbdIndicator(); e.preventDefault(); break;
+      case 'KeyR': state.builderMode='seventh'; updateBuilderKbdIndicator(); e.preventDefault(); break;
+      case 'KeyA': state.builderStringSet=0; updateBuilderKbdIndicator(); e.preventDefault(); break;
+      case 'KeyS': state.builderStringSet=1; updateBuilderKbdIndicator(); e.preventDefault(); break;
+      case 'KeyD': state.builderStringSet=2; updateBuilderKbdIndicator(); e.preventDefault(); break;
+      case 'KeyF': state.builderStringSet=3; updateBuilderKbdIndicator(); e.preventDefault(); break;
+      case 'KeyG': state.builderStringSet=4; updateBuilderKbdIndicator(); e.preventDefault(); break;
+    }
+  });
+
+  document.getElementById('seqLengthSelect').addEventListener('change', (e)=>{
+    const newLen = +e.target.value;
+    state.seqLength = newLen;
+    // resize, preserving whatever is already filled in — never top up or
+    // truncate away entries beyond just matching the new length
+    const resized = new Array(newLen).fill(null);
+    for(let i=0;i<Math.min(newLen, state.sequence.length);i++) resized[i] = state.sequence[i];
+    state.sequence = resized;
+    renderBuilder();
+  });
   document.getElementById('seqClear').addEventListener('click', ()=>{
-    state.sequence = new Array(8).fill(null); renderBuilder();
+    state.sequence = new Array(state.seqLength).fill(null);
+    state.builderFillIndex = 0;
+    renderBuilder();
   });
   document.getElementById('seqRandom').addEventListener('click', ()=>{
-    state.sequence = new Array(8).fill(null).map(()=>{
+    state.sequence = new Array(state.seqLength).fill(null).map(()=>{
       const ck = CHORD_ORDER[Math.floor(Math.random()*CHORD_ORDER.length)];
       const opts = positionsFor(ck);
       return opts[Math.floor(Math.random()*opts.length)].id;
