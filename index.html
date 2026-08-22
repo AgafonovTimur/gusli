@@ -507,6 +507,60 @@
   }
   .player-chordtrack-wrap{max-width:1600px; margin-left:auto; margin-right:auto;}
 
+  /* ---- МОБИЛЬНАЯ ВЕРСИЯ ВКЛАДКИ «ПЕСНЯ» ---- */
+  .mobile-hint{display:none;}
+  @media (max-width: 900px){
+    #view-player.active{padding-bottom:0;}
+    #view-player .player-chordtrack-wrap{padding:8px 8px; margin-bottom:0;}
+    #view-player .player-chordtrack{min-height:42px;}
+    #view-player .chordtrack-cell{min-width:52px; height:40px; padding:2px 6px;}
+    #view-player .chordtrack-cell .name{font-size:11px;}
+    #view-player .chordtrack-cell .roman{font-size:10px;}
+    #view-player .player-roll-wrap{padding:4px; margin-top:2px; margin-bottom:4px;}
+    #view-player #playerRollCanvas{min-height:200px; touch-action:none;}
+    #view-player .roll-scrollbar{height:16px; margin:6px 2px 2px;}
+    #view-player .roll-scrollbar-thumb{min-width:44px;}
+    /* правый блок превращается в выезжающую снизу панель */
+    #view-player .player-layout .right-column{
+      position:fixed; left:0; right:0; bottom:0; top:auto; margin:0; width:auto;
+      max-width:none; max-height:82vh; overflow-y:auto; z-index:140;
+      background:var(--bg-panel); border-top:1px solid var(--wood-line);
+      box-shadow:0 -12px 30px rgba(0,0,0,.55);
+      transform:translateY(105%); transition:transform .22s ease;
+      padding:10px 10px 18px;
+    }
+    #view-player.mpanel-open .player-layout .right-column{transform:translateY(0);}
+    #view-player .player-layout .right-column .card{margin:0; border:none; background:transparent; padding:0;}
+    /* редактирование нот на телефоне не используется */
+    #view-player #playerEditBtn,
+    #view-player #playerQuantizeWrap,
+    #view-player #playerNoteColors,
+    #view-player #playerColorPanel{display:none !important;}
+    #view-player .player-dropzone{padding:16px 10px; font-size:13px;}
+    #view-player .transport-btn{width:64px; height:48px;}
+    #view-player .mobile-hint{
+      display:block; text-align:center; font-size:12px; color:var(--text-faint);
+      padding:4px 8px 2px;
+    }
+    #view-player .mpanel-backdrop{
+      position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:130; display:none;
+    }
+    #view-player.mpanel-open .mpanel-backdrop{display:block;}
+  }
+  @media (max-width: 900px){
+    body{padding-left:8px; padding-right:8px;}
+    .tabs-row{gap:6px; margin-bottom:8px;}
+    nav.tabs button{padding:6px 8px; font-size:13px;}
+  }
+  @media (max-width: 900px) and (orientation: landscape){
+    .tabs-row{gap:4px; margin-bottom:4px;}
+    nav.tabs button{padding:4px 7px; font-size:12px;}
+    #view-player .player-chordtrack-wrap{padding:4px 6px;}
+    #view-player .chordtrack-cell{height:32px; min-width:46px;}
+    #view-player #playerRollCanvas{min-height:150px;}
+    #view-player .mobile-hint{padding:2px 8px 0; font-size:11px;}
+  }
+
   .seq-strip{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:18px; width:100%;}
   @media (max-width:1100px){ .seq-strip{grid-template-columns:repeat(2,1fr);} }
   @media (max-width:560px){ .seq-strip{grid-template-columns:repeat(1,1fr);} }
@@ -644,6 +698,8 @@
     <div class="player-chordtrack-wrap card" id="playerTrackWrap" style="display:none;">
       <div class="player-chordtrack" id="playerChordTrack"></div>
     </div>
+    <div class="mobile-hint" id="playerMobileHint">Коснитесь двумя пальцами, чтобы открыть панель</div>
+    <div class="mpanel-backdrop" id="playerPanelBackdrop"></div>
     <div class="player-layout">
       <div class="card player-roll-wrap" id="playerRollWrap" style="display:none;">
         <canvas id="playerRollCanvas"></canvas>
@@ -3397,6 +3453,56 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
       updateRollScrollbar();
       drawPlayerRoll();
     }, { passive:false });
+
+    /* ---- мобильный режим вкладки «Песня» ---- */
+    const isMobileView = ()=> window.matchMedia('(max-width: 900px)').matches;
+    const viewPlayerEl = document.getElementById('view-player');
+    const panelBackdrop = document.getElementById('playerPanelBackdrop');
+    function setMobilePanel(open){
+      if(!viewPlayerEl) return;
+      viewPlayerEl.classList.toggle('mpanel-open', !!open);
+      requestAnimationFrame(()=>{ fitPlayerRoll(); drawPlayerRoll(); updateRollScrollbar(); });
+    }
+    if(viewPlayerEl){
+      let twoFingerArmed = false;
+      viewPlayerEl.addEventListener('touchstart', (e)=>{
+        if(!isMobileView()) return;
+        if(e.touches.length === 2){ twoFingerArmed = true; }
+      }, { passive:true });
+      viewPlayerEl.addEventListener('touchend', (e)=>{
+        if(!isMobileView()) return;
+        if(twoFingerArmed && e.touches.length === 0){
+          twoFingerArmed = false;
+          setMobilePanel(!viewPlayerEl.classList.contains('mpanel-open'));
+        }
+      }, { passive:true });
+      viewPlayerEl.addEventListener('touchcancel', ()=>{ twoFingerArmed = false; }, { passive:true });
+    }
+    if(panelBackdrop){ panelBackdrop.addEventListener('click', ()=> setMobilePanel(false)); }
+
+    // одним пальцем — прокрутка ленты по горизонтали
+    if(playerRollCanvas){
+      let tScroll = null;
+      playerRollCanvas.addEventListener('touchstart', (e)=>{
+        if(!isMobileView() || e.touches.length !== 1){ tScroll = null; return; }
+        tScroll = { x:e.touches[0].clientX, b:rollBStart(), moved:false };
+      }, { passive:true });
+      playerRollCanvas.addEventListener('touchmove', (e)=>{
+        if(!tScroll || e.touches.length !== 1) return;
+        const dx = e.touches[0].clientX - tScroll.x;
+        if(Math.abs(dx) > 3) tScroll.moved = true;
+        if(tScroll.moved){
+          e.preventDefault();
+          setRollBStart(tScroll.b - dx / ROLL.zoom);
+          updateRollScrollbar();
+          drawPlayerRoll();
+        }
+      }, { passive:false });
+      playerRollCanvas.addEventListener('touchend', ()=>{ tScroll = null; }, { passive:true });
+    }
+    window.addEventListener('orientationchange', ()=>{
+      setTimeout(()=>{ fitPlayerRoll(); drawPlayerRoll(); updateRollScrollbar(); }, 250);
+    });
 
     window.addEventListener('resize', ()=>{ fitPlayerRoll(); drawPlayerRoll(); updateRollScrollbar(); });
   }
