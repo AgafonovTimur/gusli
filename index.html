@@ -440,6 +440,9 @@
   .transport-btn.play.playing .ic-play{display:none;}
   .transport-btn.play.playing .ic-pause{display:block;}
   .transport-edit-btn{align-self:flex-start;}
+  .metro-row{display:flex; align-items:center; gap:10px;}
+  .metro-vol{width:110px; accent-color:var(--gold-soft, #c9a227); cursor:pointer;}
+  .player-metronome{display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--text-dim); cursor:pointer;}
   .player-quantize{display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--text-dim); cursor:pointer;}
   .player-note-colors{display:inline-flex; align-items:center; gap:6px;}
   .note-color-btn{width:22px; height:22px; border-radius:50%; border:2px solid transparent; background:var(--nc); cursor:pointer; padding:0; opacity:0.55; transition:opacity .15s, border-color .15s, transform .15s;}
@@ -622,6 +625,7 @@
           </div>
           <div class="player-song-title" id="playerSongTitle"></div>
           <div class="player-transport">
+            <button class="btn transport-edit-btn" id="playerEditBtn" title="Режим редактирования">Редактировать ноты</button>
             <div class="transport-bpm-row">
               <span class="bpm-label">BPM</span>
               <div class="bpm-control">
@@ -632,7 +636,10 @@
               <button class="transport-btn play" id="playerPlayBtn" title="Play" disabled><span class="ic-play"></span><span class="ic-pause"></span></button>
               <button class="transport-btn stop" id="playerStopBtn" title="Стоп" disabled><span class="ic-stop"></span></button>
             </div>
-            <button class="btn transport-edit-btn" id="playerEditBtn" title="Режим редактирования">Редактировать ноты</button>
+            <div class="metro-row"><label class="player-metronome" id="playerMetroWrap">
+              <input type="checkbox" id="playerMetroBox"> метроном
+            </label>
+            <input type="range" class="metro-vol" id="playerMetroVol" min="0" max="100" step="1" value="50" title="Громкость метронома"></div>
             <label class="player-quantize" id="playerQuantizeWrap" style="display:none;">
               <input type="checkbox" id="playerQuantizeBox" checked> выравнивать по такту (1/16)
             </label>
@@ -2297,7 +2304,82 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
 
   function movePlayhead(){ updateChordTrackHighlight(); }
 
+  /* ---------- МЕТРОНОМ ---------- */
+  const playerMetroBox = document.getElementById('playerMetroBox');
+  let metroCtx = null;
+  let metroNodes = [];
+  let metroSched = null;   // {ctxT0, step, startBeatPos, countIn, total, next, timer}
+  const playerMetroVol = document.getElementById('playerMetroVol');
+  let metroVol = 50;   // 50 = прежняя громкость
+  function metroEnabled(){ return !!(playerMetroBox && playerMetroBox.checked); }
+  function metroGainMul(){ return metroVol / 50; }
+  function ensureMetroCtx(){
+    try{
+      if(!metroCtx) metroCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if(metroCtx.state === 'suspended') metroCtx.resume();
+      return true;
+    }catch(e){ return false; }
+  }
+  // Клик в стиле Cubase: короткий синусовый «бип», сильная доля выше по тону
+  function metroClick(atTime, accent){
+    const osc = metroCtx.createOscillator();
+    const gain = metroCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(accent ? 1760 : 1174, atTime);
+    const peak = Math.max(0.0002, (accent ? 0.45 : 0.26) * metroGainMul());
+    gain.gain.setValueAtTime(0.0001, atTime);
+    gain.gain.exponentialRampToValueAtTime(peak, atTime + 0.001);
+    gain.gain.exponentialRampToValueAtTime(0.0001, atTime + 0.035);
+    osc.connect(gain).connect(metroCtx.destination);
+    osc.start(atTime);
+    osc.stop(atTime + 0.05);
+    metroNodes.push(osc, gain);
+    if(metroNodes.length > 40) metroNodes.splice(0, metroNodes.length - 40);
+  }
+  function stopMetronome(){
+    if(metroSched && metroSched.timer) clearInterval(metroSched.timer);
+    metroSched = null;
+    metroNodes.forEach(n=>{ try{ n.stop && n.stop(); }catch(e){} try{ n.disconnect(); }catch(e){} });
+    metroNodes = [];
+  }
+  // Сетка долей крутится всегда, пока идёт воспроизведение; звук выдаётся только
+  // если галочка включена в этот момент — поэтому включение/выключение работает на лету.
+  function metroTick(){
+    const m = metroSched;
+    if(!m) return;
+    const now = metroCtx.currentTime;
+    const bpb = beatsPerBar();
+    while(m.next < m.countIn + m.total){
+      const t = m.ctxT0 + m.next * m.step;
+      if(t > now + 0.15) break;
+      if(t > now - 0.02 && metroEnabled()){
+        const accent = m.next >= m.countIn
+          ? (Math.round(m.startBeatPos + (m.next - m.countIn)) % bpb) === 0
+          : false;
+        metroClick(t, accent);
+      }
+      m.next++;
+    }
+  }
+  // startBeatPos — доля, с которой начинается воспроизведение; countIn — сколько долей отсчёта
+  function startMetronome(beatMs, startBeatPos, totalBeats, countIn){
+    stopMetronome();
+    if(!ensureMetroCtx()) return;
+    metroSched = {
+      ctxT0: metroCtx.currentTime + 0.06,
+      step: beatMs/1000,
+      startBeatPos: startBeatPos,
+      countIn: countIn,
+      total: Math.max(1, Math.ceil(totalBeats)),
+      next: 0,
+      timer: null
+    };
+    metroTick();
+    metroSched.timer = setInterval(metroTick, 25);
+  }
+
   function stopPlayback(){
+    stopMetronome();
     ROLL.playing = false;
     playerState.timers.forEach(t=>clearTimeout(t));
     playerState.timers = [];
@@ -2330,6 +2412,11 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
     ROLL.playing = false; ROLL.beat = startBeatPos; ROLL.viewBeat = null;
     playerState.playing = true;
     playerPlayBtn.classList.add('playing');
+
+    // метроном: 4 доли отсчёта + вся длина песни от текущей позиции
+    let chordBeats = 0;
+    for(let p=startIdx; p<playerState.song.chords.length; p++) chordBeats += playerState.song.chords[p].durationBeats;
+    startMetronome(beatMs, startBeatPos, Math.max(chordBeats, timelineEnd() - startBeatPos), 4);
 
     // отсчёт 4-3-2-1 перед стартом; во время отсчёта на экране остаётся текущий (первый) аккорд
     let count = 4;
@@ -2384,6 +2471,28 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
       ? playerState.timeline.chords[startIdx].start : 0;
     const totalMs = Math.max(elapsed, (timelineEnd() - startBeatPos) * beatMs);
     playerState.timers.push(setTimeout(()=>{ stopPlayback(); }, totalMs + 80));
+  }
+
+  if(playerMetroVol){
+    storage.get('metro-volume').then(r=>{
+      const v = r && parseInt(r.value, 10);
+      if(Number.isFinite(v)){ metroVol = Math.min(100, Math.max(0, v)); playerMetroVol.value = metroVol; }
+    });
+    // во время перетаскивания громкость слышна сразу, но НЕ сохраняется
+    playerMetroVol.addEventListener('input', ()=>{ metroVol = Number(playerMetroVol.value) || 0; });
+    // сохраняем только когда значение окончательно выбрано (отпустили слайдер)
+    playerMetroVol.addEventListener('change', ()=>{
+      metroVol = Number(playerMetroVol.value) || 0;
+      storage.set('metro-volume', String(metroVol));
+      playerMetroVol.blur();
+    });
+  }
+
+  if(playerMetroBox){
+    playerMetroBox.addEventListener('change', ()=>{
+      if(playerMetroBox.checked) ensureMetroCtx();
+      else metroNodes.forEach(n=>{ try{ n.stop && n.stop(); }catch(e){} });
+    });
   }
 
   playerBpmInput.addEventListener('input', ()=>{
