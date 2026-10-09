@@ -44,7 +44,7 @@
     --wood-line: #2c2c2c;
     --wood-line-soft: #232323;
     --text: #e7e7e7;
-    --text-dim: #a7a7a7;
+    --text-dim: #D0D0D0;
     --text-faint: #6e6e6e;
     --gold: #d0d0d0;
     --gold-soft: #969696;
@@ -99,6 +99,9 @@
     padding: 18px 20px 24px;
     transition: background-color .35s ease, color .35s ease;
   }
+  /* выделение текста мышью отключено во всём приложении (кроме полей ввода) */
+  body{ user-select:none; -webkit-user-select:none; }
+  input, textarea{ user-select:text; -webkit-user-select:text; }
   /* wood-theme gradient is a separate fixed layer so switching themes
      fades it in/out smoothly instead of hard-cutting a gradient<->solid
      background (which browsers cannot interpolate, causing a flash). */
@@ -126,6 +129,30 @@
   }
   .key-switch button:hover{color:var(--text-dim);}
   .key-switch button.active{background:var(--bg-panel-3); color:var(--text-dim); font-weight:700; box-shadow:inset 0 0 0 1px var(--gold-soft);}
+
+  /* ---- меню «Строй» ---- */
+  .tuning-dropdown{margin-bottom:4px;}
+  .progression-list.tuning-list{width:max-content; max-width:calc(100vw - 24px); max-height:none; padding:8px;
+    user-select:none; -webkit-user-select:none;
+    scrollbar-width:thin; scrollbar-color:var(--wood-line) transparent;}
+  /* полоса прокрутки меню «Строй» (появляется, только если меню не помещается) — в цвет темы */
+  .tuning-list::-webkit-scrollbar{width:8px; height:8px;}
+  .tuning-list::-webkit-scrollbar-track{background:transparent;}
+  .tuning-list::-webkit-scrollbar-thumb{background:var(--wood-line); border-radius:4px;}
+  .tuning-list::-webkit-scrollbar-thumb:hover{background:var(--gold-soft);}
+  .tuning-list::-webkit-scrollbar-corner{background:transparent;}
+  .tuning-grid{display:grid; grid-template-columns:repeat(6, auto) auto; column-gap:4px; row-gap:2px; align-items:center;}
+  .tuning-item{white-space:nowrap;}
+  .tuning-hint{font-family:'PT Mono',monospace; font-size:12px; color:var(--text-dim); white-space:nowrap; padding:4px 6px 4px 12px; line-height:1.5;}
+  .tuning-sep{grid-column:1 / -1; border-top:1px solid var(--wood-line); margin:6px 0;}
+  .tuning-tip{position:fixed; z-index:600; display:none; max-width:280px; padding:6px 10px; border-radius:6px;
+    background:var(--bg-panel-3); border:1px solid var(--wood-line); color:var(--text-dim); font-size:12.5px;
+    box-shadow:var(--shadow); pointer-events:none;}
+  @media (max-width: 900px){
+    .progression-list.tuning-list{position:fixed; left:8px; right:8px; top:56px; width:auto; max-width:none;}
+  }
+  .tuning-item.active{background:var(--bg-panel-3);}
+  .tuning-item.active .pname{color:var(--gold);}
 
 
   nav.tabs{display:inline-flex; gap:6px; flex-wrap:wrap; border-bottom:1px solid var(--wood-line); max-width:100%; flex:none;}
@@ -292,6 +319,19 @@
   }
   .fade-view.hidden{ opacity:0; pointer-events:none; transform:scale(.97); }
   .fade-view.visible{ opacity:1; pointer-events:all; transform:scale(1); }
+  /* Тренажёр: окно настроек (шестерёнка) не растягивает карточку и страницу —
+     открывается в размере карточки, а если не помещается — прокручивается внутри.
+     На высоких экранах карточка того же размера, что и раньше (546px) */
+  @media (min-width: 901px){
+    #view-trainer .right-column .info-card{min-height:clamp(300px, calc(100vh - 412px), 546px);}
+    #view-trainer #infoSettings{
+      position:absolute; inset:0 20px 20px 0; width:auto; overflow-y:auto; overflow-x:hidden;
+      scrollbar-width:thin; scrollbar-color:var(--wood-line) transparent;
+    }
+    #view-trainer #infoSettings::-webkit-scrollbar{width:8px;}
+    #view-trainer #infoSettings::-webkit-scrollbar-track{background:transparent;}
+    #view-trainer #infoSettings::-webkit-scrollbar-thumb{background:var(--wood-line); border-radius:4px;}
+  }
 
   .settings-container{display:flex; flex-direction:column; gap:16px; margin-top:8px;}
   .settings-group{display:flex; flex-direction:column; gap:7px;}
@@ -502,10 +542,26 @@
   }
   .player-countdown.show{display:flex;}
   .player-layout{position:relative;}
-  .player-layout .right-column{
-    position:absolute; top:0; left:100%; margin-left:20px; width:340px;
-  }
   .player-chordtrack-wrap{max-width:1600px; margin-left:auto; margin-right:auto;}
+
+  /* ---- панель управления песней в строке вкладок (Play / Стоп / BPM / метроном / Меню) ---- */
+  .player-toolbar{display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:4px;}
+  .player-toolbar .transport-buttons{gap:6px;}
+  .player-toolbar .transport-btn{width:50px; height:36px; border-radius:10px;}
+  .player-toolbar .metro-vol{width:90px;}
+  .player-toolbar .bpm-input{padding:7px 8px; width:58px;}
+  .player-menu-panel{
+    display:none; position:absolute; top:calc(100% + 6px); right:0; z-index:30; width:340px;
+    max-height:calc(100vh - 90px); overflow-y:auto; border-radius:var(--radius); box-shadow:var(--shadow);
+    scrollbar-width:thin; scrollbar-color:var(--wood-line) transparent;
+  }
+  .player-menu-panel::-webkit-scrollbar{width:8px;}
+  .player-menu-panel::-webkit-scrollbar-track{background:transparent;}
+  .player-menu-panel::-webkit-scrollbar-thumb{background:var(--wood-line); border-radius:4px;}
+  .player-menu-panel.open{display:block;}
+  .player-menu-panel .card{background:var(--bg-panel-2);}
+  .player-menu-panel .nc-sub{min-width:104px;} /* поле яркости целиком помещается в меню */
+  .player-menu-edit{margin-top:14px;}
 
   /* ---- МОБИЛЬНАЯ ВЕРСИЯ ВКЛАДКИ «ПЕСНЯ» ---- */
   .mobile-hint{display:none;}
@@ -521,23 +577,24 @@
     #view-player .roll-scrollbar{height:16px; margin:6px 2px 2px;}
     #view-player .roll-scrollbar-thumb{min-width:44px;}
     /* правый блок превращается в выезжающую снизу панель */
-    #view-player .player-layout .right-column{
+    .player-menu-panel, .player-menu-panel.open{
+      display:block;
       position:fixed; left:0; right:0; bottom:0; top:auto; margin:0; width:auto;
-      max-width:none; max-height:82vh; overflow-y:auto; z-index:140;
+      max-width:none; max-height:82vh; overflow-y:auto; z-index:140; border-radius:0;
       background:var(--bg-panel); border-top:1px solid var(--wood-line);
       box-shadow:0 -12px 30px rgba(0,0,0,.55);
       transform:translateY(105%); transition:transform .22s ease;
       padding:10px 10px 18px;
     }
-    #view-player.mpanel-open .player-layout .right-column{transform:translateY(0);}
-    #view-player .player-layout .right-column .card{margin:0; border:none; background:transparent; padding:0;}
+    .player-menu-panel.mopen{transform:translateY(0);}
+    .player-menu-panel .card{margin:0; border:none; background:transparent; padding:0;}
     /* редактирование нот на телефоне не используется */
-    #view-player #playerEditBtn,
-    #view-player #playerQuantizeWrap,
-    #view-player #playerNoteColors,
-    #view-player #playerColorPanel{display:none !important;}
-    #view-player .player-dropzone{padding:16px 10px; font-size:13px;}
-    #view-player .transport-btn{width:64px; height:48px;}
+    #playerEditBtn,
+    #playerQuantizeWrap,
+    #playerNoteColors,
+    #playerColorPanel{display:none !important;}
+    .player-menu-panel .player-dropzone{padding:16px 10px; font-size:13px;}
+    .player-toolbar .transport-btn{width:64px; height:48px;}
     #view-player .mobile-hint{
       display:block; text-align:center; font-size:12px; color:var(--text-faint);
       padding:4px 8px 2px;
@@ -641,9 +698,68 @@
       <button data-view="player">Песня</button>
       <button data-view="table">Таблица</button>
     </nav>
-    <div class="key-switch" id="keySwitch">
-      <button data-key="A" class="active">A</button>
-      <button data-key="F#m">F#m</button>
+    <div class="progression-dropdown tuning-dropdown" id="tuningDropdown">
+      <button class="btn progression-btn" id="tuningBtn">Строй: <span id="tuningBtnLabel">A мажор</span> <span class="arrow">▾</span></button>
+      <div class="progression-list tuning-list" id="tuningList" style="display:none;"></div>
+    </div>
+    <!-- панель управления песней: видна только на вкладке «Песня» -->
+    <div class="player-toolbar" id="playerToolbar" style="display:none;">
+      <div class="transport-buttons">
+        <button class="transport-btn play" id="playerPlayBtn" title="Play" disabled><span class="ic-play"></span><span class="ic-pause"></span></button>
+        <button class="transport-btn stop" id="playerStopBtn" title="Стоп" disabled><span class="ic-stop"></span></button>
+      </div>
+      <div class="transport-bpm-row">
+        <span class="bpm-label">BPM</span>
+        <div class="bpm-control">
+          <input type="text" inputmode="numeric" class="bpm-input" id="playerBpmInput" placeholder="BPM">
+        </div>
+      </div>
+      <div class="metro-row"><label class="player-metronome" id="playerMetroWrap">
+        <input type="checkbox" id="playerMetroBox"> метроном
+      </label>
+      <input type="range" class="metro-vol" id="playerMetroVol" min="0" max="100" step="1" value="50" title="Громкость метронома"></div>
+      <label class="player-quantize" id="playerQuantizeWrap" style="display:none;">
+        <input type="checkbox" id="playerQuantizeBox" checked> выравнивать по такту (1/16)
+      </label>
+      <div class="player-note-colors" id="playerNoteColors" style="display:none;">
+        <button class="note-color-btn active" id="noteColorOpenBtn" data-note-type="open" title="Открытые струны (клавиша 1)" style="--nc:#55d66e"></button>
+        <button class="note-color-btn" id="noteColorClosedBtn" data-note-type="closed" title="Закрытые струны (клавиша 2)" style="--nc:#eb4b4b"></button>
+        <button class="note-color-btn" id="noteColorMelodyBtn" data-note-type="melody" title="Мелодия (клавиша 3)" style="--nc:#e8d84b"></button>
+      </div>
+      <div class="progression-dropdown" id="playerMenuDropdown">
+        <button class="btn progression-btn" id="playerMenuBtn">Меню <span class="arrow">▾</span></button>
+        <div class="player-menu-panel" id="playerMenuPanel">
+          <div id="playerPickerBlock" class="card">
+            <div class="settings-label" style="margin-bottom:10px;">Загрузка песни</div>
+            <div class="player-dropzone" id="playerDropzone">
+              <div class="player-dropzone-text">Перетащите JSON или MIDI‑файл сюда<br>или нажмите, чтобы выбрать</div>
+              <input type="file" id="playerFileInput" accept="application/json,.json,.mid,.midi,audio/midi" style="display:none;">
+            </div>
+            <div class="row" style="margin-top:10px; gap:8px;">
+              <button class="btn" id="playerTemplateBtn">Скачать шаблон</button>
+              <div class="progression-dropdown" id="downloadSongDropdown">
+                <button class="btn" id="playerDownloadSongBtn" disabled>Скачать песню</button>
+                <div class="progression-list" id="downloadSongMenu" style="display:none; min-width:150px;">
+                  <div class="progression-item" data-fmt="json"><span class="pname">JSON</span></div>
+                  <div class="progression-item" data-fmt="midi"><span class="pname">MIDI</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="player-song-title" id="playerSongTitle"></div>
+            <div class="player-menu-edit">
+              <button class="btn transport-edit-btn" id="playerEditBtn" title="Режим редактирования">Редактировать ноты</button>
+            </div>
+            <div class="nc-panel" id="playerColorPanel">
+              <div class="nc-row"><input type="color" class="nc-color" data-nc="open"><span class="nc-title">Аккорд</span></div>
+              <div class="nc-row"><span class="nc-sub">Яркость неона</span><input type="range" class="nc-range" data-ng="open" min="0" max="100" value="100"><input type="number" class="nc-num" data-ngn="open" min="0" max="100" value="100"></div>
+              <div class="nc-row"><input type="color" class="nc-color" data-nc="cov"><span class="nc-title">Закрытая струна</span></div>
+              <div class="nc-row"><span class="nc-sub">Яркость неона</span><input type="range" class="nc-range" data-ng="cov" min="0" max="100" value="100"><input type="number" class="nc-num" data-ngn="cov" min="0" max="100" value="100"></div>
+              <div class="nc-row"><input type="color" class="nc-color" data-nc="melody"><span class="nc-title">Мелодия</span></div>
+              <div class="nc-row"><span class="nc-sub">Яркость неона</span><input type="range" class="nc-range" data-ng="melody" min="0" max="100" value="100"><input type="number" class="nc-num" data-ngn="melody" min="0" max="100" value="100"></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     </div>
     <div class="builder-toolbar" id="builderToolbar" style="display:none;">
@@ -706,59 +822,6 @@
         <div class="roll-scrollbar" id="playerRollScrollbar"><div class="roll-scrollbar-thumb" id="playerRollScrollThumb"></div></div>
         <div class="player-countdown" id="playerCountdown"></div>
       </div>
-      <div class="right-column">
-        <div id="playerPickerBlock" class="card">
-          <div class="settings-label" style="margin-bottom:10px;">Загрузка песни</div>
-          <div class="player-dropzone" id="playerDropzone">
-            <div class="player-dropzone-text">Перетащите JSON или MIDI‑файл сюда<br>или нажмите, чтобы выбрать</div>
-            <input type="file" id="playerFileInput" accept="application/json,.json,.mid,.midi,audio/midi" style="display:none;">
-          </div>
-          <div class="row" style="margin-top:10px; gap:8px;">
-            <button class="btn" id="playerTemplateBtn">Скачать шаблон</button>
-            <div class="progression-dropdown" id="downloadSongDropdown">
-              <button class="btn" id="playerDownloadSongBtn" disabled>Скачать песню</button>
-              <div class="progression-list" id="downloadSongMenu" style="display:none; min-width:150px;">
-                <div class="progression-item" data-fmt="json"><span class="pname">JSON</span></div>
-                <div class="progression-item" data-fmt="midi"><span class="pname">MIDI</span></div>
-              </div>
-            </div>
-          </div>
-          <div class="player-song-title" id="playerSongTitle"></div>
-          <div class="player-transport">
-            <button class="btn transport-edit-btn" id="playerEditBtn" title="Режим редактирования">Редактировать ноты</button>
-            <div class="transport-bpm-row">
-              <span class="bpm-label">BPM</span>
-              <div class="bpm-control">
-                <input type="text" inputmode="numeric" class="bpm-input" id="playerBpmInput" placeholder="BPM">
-              </div>
-            </div>
-            <div class="transport-buttons">
-              <button class="transport-btn play" id="playerPlayBtn" title="Play" disabled><span class="ic-play"></span><span class="ic-pause"></span></button>
-              <button class="transport-btn stop" id="playerStopBtn" title="Стоп" disabled><span class="ic-stop"></span></button>
-            </div>
-            <div class="metro-row"><label class="player-metronome" id="playerMetroWrap">
-              <input type="checkbox" id="playerMetroBox"> метроном
-            </label>
-            <input type="range" class="metro-vol" id="playerMetroVol" min="0" max="100" step="1" value="50" title="Громкость метронома"></div>
-            <label class="player-quantize" id="playerQuantizeWrap" style="display:none;">
-              <input type="checkbox" id="playerQuantizeBox" checked> выравнивать по такту (1/16)
-            </label>
-            <div class="player-note-colors" id="playerNoteColors" style="display:none;">
-              <button class="note-color-btn active" id="noteColorOpenBtn" data-note-type="open" title="Открытые струны (клавиша 1)" style="--nc:#55d66e"></button>
-              <button class="note-color-btn" id="noteColorClosedBtn" data-note-type="closed" title="Закрытые струны (клавиша 2)" style="--nc:#eb4b4b"></button>
-              <button class="note-color-btn" id="noteColorMelodyBtn" data-note-type="melody" title="Мелодия (клавиша 3)" style="--nc:#e8d84b"></button>
-            </div>
-          </div>
-          <div class="nc-panel" id="playerColorPanel">
-            <div class="nc-row"><input type="color" class="nc-color" data-nc="open"><span class="nc-title">Аккорд</span></div>
-            <div class="nc-row"><span class="nc-sub">Яркость неона</span><input type="range" class="nc-range" data-ng="open" min="0" max="100" value="100"><input type="number" class="nc-num" data-ngn="open" min="0" max="100" value="100"></div>
-            <div class="nc-row"><input type="color" class="nc-color" data-nc="cov"><span class="nc-title">Закрытая струна</span></div>
-            <div class="nc-row"><span class="nc-sub">Яркость неона</span><input type="range" class="nc-range" data-ng="cov" min="0" max="100" value="100"><input type="number" class="nc-num" data-ngn="cov" min="0" max="100" value="100"></div>
-            <div class="nc-row"><input type="color" class="nc-color" data-nc="melody"><span class="nc-title">Мелодия</span></div>
-            <div class="nc-row"><span class="nc-sub">Яркость неона</span><input type="range" class="nc-range" data-ng="melody" min="0" max="100" value="100"><input type="number" class="nc-num" data-ngn="melody" min="0" max="100" value="100"></div>
-          </div>
-        </div>
-      </div>
     </div>
   </section>
 
@@ -797,7 +860,7 @@
             <th data-key="covered">Перекрытая струна</th>
             <th data-key="chordDisplay">Аккорд</th>
             <th data-key="letters">Буквы аккорда(обращение)</th>
-            <th data-key="degreeAmajNum" id="thDegree">Ступень в Amaj</th>
+            <th data-key="degreeAmajNum" id="thDegree">Ступень в A мажор</th>
             <th data-key="startNotation">Струна начала аккорда</th>
           </tr>
         </thead>
@@ -835,10 +898,10 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
 
   /* ---- тональность: A мажор / F# минор (параллельные, ноты те же) ---- */
   const KEY_DEFS = {
-    "A":   { label:"A",   degreeCol:"Ступень в Amaj",  cardLine:"Ступень в A major",
+    "A":   { label:"A",   degreeCol:"Ступень в A мажор",  cardLine:"Ступень в A мажор",
              order:["A","B","C#","D","E","F#"],
              roman:{ "A":"I", "B":"ii", "C#":"iii", "D":"IV", "E":"V", "F#":"vi" } },
-    "F#m": { label:"F#m", degreeCol:"Ступень в F#min", cardLine:"Ступень в F# minor",
+    "F#m": { label:"F#m", degreeCol:"Ступень в F# минор", cardLine:"Ступень в F# минор",
              order:["F#","A","B","C#","D","E"],
              roman:{ "F#":"i", "A":"III", "B":"iv", "C#":"v", "D":"VI", "E":"VII" } }
   };
@@ -879,7 +942,9 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
   };
 
   function qualitiesFor(root){
-    return [ROOT_META[root].triad, "sus2", "sus4", ROOT_SEVENTH[root]];
+    if(!ROOT_META[root]) return [];
+    // в перестроенных строях у ступени может не быть септаккорда — тогда его просто нет в списке
+    return [ROOT_META[root].triad, "sus2", "sus4", ROOT_SEVENTH[root]].filter(Boolean);
   }
   function chordKey(root, quality){ return root+"_"+quality; }
 
@@ -954,6 +1019,7 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
     {chord:"B_sus2", open:[11,10,7], covered:[13,12,9,8], topString:11, degAmaj:"", degFmin:"", comment:"", start:""},
     {chord:"B_sus2", open:[10,7,4], covered:[9,8,6,5], topString:10, degAmaj:"", degFmin:"", comment:"", start:""},
     {chord:"B_sus2", open:[7,4,3], covered:[9,8,6,5], topString:7, degAmaj:"", degFmin:"", comment:"", start:""},
+    {chord:"B_sus4", open:[15,14,11], covered:[13,12,10,9], topString:15, degAmaj:"", degFmin:"", comment:"", start:""},
     {chord:"B_sus4", open:[14,11,8], covered:[13,12,10,9], topString:14, degAmaj:"", degFmin:"", comment:"", start:""},
     {chord:"B_sus4", open:[11,8,7], covered:[13,12,10,9], topString:11, degAmaj:"", degFmin:"", comment:"", start:""},
     {chord:"B_sus4", open:[8,7,4], covered:[6,5,3,2], topString:8, degAmaj:"", degFmin:"", comment:"", start:""},
@@ -977,6 +1043,7 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
     {chord:"C#_min7", open:[10,8,6,4], covered:[9,7,5], topString:10, degAmaj:"", degFmin:"", comment:"", start:""},
     {chord:"C#_min7", open:[8,6,4,3], covered:[7,5,2], topString:8, degAmaj:"", degFmin:"", comment:"", start:""},
     {chord:"C#_min7", open:[6,4,3,1], covered:[7,5,2], topString:6, degAmaj:"", degFmin:"", comment:"", start:""},
+    {chord:"D_sus2", open:[15,12,9], covered:[14,13,11,10], topString:15, degAmaj:"", degFmin:"", comment:"", start:""},
     {chord:"D_sus2", open:[12,9,8], covered:[11,10,7,6], topString:12, degAmaj:"", degFmin:"", comment:"", start:""},
     {chord:"D_sus2", open:[9,8,5], covered:[11,10,7,6], topString:9, degAmaj:"", degFmin:"", comment:"", start:""},
     {chord:"D_sus2", open:[8,5,2], covered:[7,6,4,3], topString:8, degAmaj:"", degFmin:"", comment:"", start:""},
@@ -1027,6 +1094,33 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
     idx:i,
     ...r
   }));
+
+  /* ==== аппликатуры аккордов с основой на струнах 13 / 6 ====
+     В строе A мажор на этих струнах G# — аккордов от них нет (там уменьшённое трезвучие).
+     В перестроенных строях (D мажор, E мажор, G мажор и т.д.) на этих струнах получается
+     обычный мажорный/минорный аккорд, и тогда используются аппликатуры ниже.
+     Название аккорда подставляется автоматически по строю.
+     type: triad — трезвучие, sus2, sus4, seventh — септаккорд.
+     start (шифр позиции) — пустой, можно вписать вручную. */
+  const RAW_G = [
+    {type:"triad",   open:[13,11,9],    covered:[12,10,8,7,5], topString:13, comment:"", start:""},
+    {type:"triad",   open:[11,9,6],     covered:[12,10,8,7,5], topString:11, comment:"", start:""},
+    {type:"triad",   open:[9,6,4],      covered:[8,7,5,3],     topString:9,  comment:"", start:""},
+    {type:"triad",   open:[6,4,2],      covered:[8,7,5,3],     topString:6,  comment:"", start:""},
+    {type:"sus2",    open:[13,12,9],    covered:[15,14,11,10], topString:13, comment:"", start:""},
+    {type:"sus2",    open:[12,9,6],     covered:[11,10,8,7],   topString:12, comment:"", start:""},
+    {type:"sus2",    open:[9,6,5],      covered:[8,7,4,3],     topString:9,  comment:"", start:""},
+    {type:"sus2",    open:[6,5,2],      covered:[8,7,4,3],     topString:6,  comment:"", start:""},
+    {type:"sus4",    open:[13,10,9],    covered:[15,14,12,11], topString:13, comment:"", start:""},
+    {type:"sus4",    open:[10,9,6],     covered:[8,7,5,4],     topString:10, comment:"", start:""},
+    {type:"sus4",    open:[9,6,3],      covered:[8,7,5,4],     topString:9,  comment:"", start:""},
+    {type:"sus4",    open:[6,3,2],      covered:[8,7,5,4],     topString:6,  comment:"", start:""},
+    {type:"seventh", open:[14,13,11,9], covered:[15,12,10,8],  topString:14, comment:"", start:""},
+    {type:"seventh", open:[13,11,9,7],  covered:[12,10,8],     topString:13, comment:"", start:""},
+    {type:"seventh", open:[11,9,7,6],   covered:[12,10,8],     topString:11, comment:"", start:""},
+    {type:"seventh", open:[9,7,6,4],    covered:[8,5,3],       topString:9,  comment:"", start:""},
+    {type:"seventh", open:[7,6,4,2],    covered:[8,5,3],       topString:7,  comment:"", start:""},
+  ];
 
   /* ============================================================
      STATE + persistence (localStorage — работает в обычном браузере,
@@ -1666,41 +1760,470 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
   }
 
   /* ============================================================
-     KEY SWITCH (A / F#m)
+     СТРОЙ — меню «Строй» (лады без перестройки и тональности
+     с перестройкой колков)
+     ------------------------------------------------------------
+     Струны разбиты на 7 групп по ноте:
+       группа 0 — струны 15, 8, 1   (в строе A мажор это E)
+       группа 1 — струны 14, 7      (F#)
+       группа 2 — струны 13, 6      (G#)
+       группа 3 — струны 12, 5      (A)
+       группа 4 — струны 11, 4      (B)
+       группа 5 — струны 10, 3      (C#)
+       группа 6 — струны 9, 2       (D)
+     notes — как называется нота каждой группы в этом строе,
+     shift — на сколько полутонов перестроена группа (+1 вверх, -1 вниз).
      ============================================================ */
-  document.querySelectorAll('#keySwitch button').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const k = btn.dataset.key;
-      if(k === CURRENT_KEY) return;
-      CURRENT_KEY = k;
-      document.querySelectorAll('#keySwitch button').forEach(b=>b.classList.toggle('active', b.dataset.key===k));
+  const TUNING_SETS = {
+    base:   { notes:["E","F#","G#","A","B","C#","D"],  shift:[0,0,0,0,0,0,0] },
+    D:      { notes:["E","F#","G","A","B","C#","D"],   shift:[0,0,-1,0,0,0,0] },
+    E:      { notes:["E","F#","G#","A","B","C#","D#"], shift:[0,0,0,0,0,0,1] },
+    G:      { notes:["E","F#","G","A","B","C","D"],    shift:[0,0,-1,0,0,-1,0] },
+    B:      { notes:["E","F#","G#","A#","B","C#","D#"],shift:[0,0,0,1,0,0,1] },
+    C:      { notes:["E","F","G","A","B","C","D"],     shift:[0,-1,-1,0,0,-1,0] },
+    Fs:     { notes:["E#","F#","G#","A#","B","C#","D#"],shift:[1,0,0,1,0,0,1] },
+    FsHarm: { notes:["E#","F#","G#","A","B","C#","D"], shift:[1,0,0,0,0,0,0] },
+    AHarm:  { notes:["E","F","G#","A","B","C","D"],    shift:[0,-1,0,0,0,-1,0] },
+    FsMel:  { notes:["E#","F#","G#","A","B","C#","D#"],shift:[1,0,0,0,0,0,1] },
+    AMel:   { notes:["E","F#","G#","A","B","C","D"],   shift:[0,0,0,0,0,-1,0] },
+    F:      { notes:["E","F","G","A","Bb","C","D"],    shift:[0,-1,-1,0,-1,-1,0] },
+    Cs:     { notes:["E#","F#","G#","A#","B#","C#","D#"],shift:[1,0,0,1,1,0,1] },
+    Eb:     { notes:["Eb","F","G","Ab","Bb","C","D"],  shift:[-1,-1,-1,-1,-1,-1,0] },
+    Bb:     { notes:["F","G","A","Bb","C","D","Eb"],   shift:[1,1,1,1,1,1,1] },
+    Ab:     { notes:["Eb","F","G","Ab","Bb","C","Db"], shift:[-1,-1,-1,-1,-1,-1,-1] }
+  };
+  /* ---- пункты меню «Строй» ----
+     Строка таблицы = один строй (набор нот). В строке мажора: мажор, параллельный минор,
+     дорийский, фригийский, лидийский, миксолидийский (локрийский не берём — у него нет
+     мажорной/минорной тоники). Ниже — гармон. и мелод. минор со своими ладами. */
+  const MAJOR_ROWS = [
+    { set:"base", major:"A"  },
+    { set:"D",    major:"D"  },
+    { set:"E",    major:"E"  },
+    { set:"G",    major:"G"  },
+    { set:"B",    major:"B"  },
+    { set:"C",    major:"C"  },
+    { set:"Fs",   major:"F#" },
+    { set:"F",    major:"F"  },
+    { set:"Cs",   major:"C#" },
+    { set:"Eb",   major:"Eb" },
+    { set:"Bb",   major:"Bb" },
+    { set:"Ab",   major:"Ab" }
+  ];
+  // step — ступень мажора, от которой строится лад
+  const MAJOR_MODES = [
+    { key:"major", step:0, name:"мажор" },
+    { key:"minor", step:5, name:"минор" },
+    { key:"dor",   step:1, name:"дорийский" },
+    { key:"phr",   step:2, name:"фригийский" },
+    { key:"lyd",   step:3, name:"лидийский" },
+    { key:"mix",   step:4, name:"миксолидийский" }
+  ];
+  const MINOR_ROWS = [
+    { set:"FsHarm", tonic:"F#", kind:"harm", id:"F#hm" },
+    { set:"AHarm",  tonic:"A",  kind:"harm", id:"Ahm"  },
+    { set:"FsMel",  tonic:"F#", kind:"mel",  id:"F#mm" },
+    { set:"AMel",   tonic:"A",  kind:"mel",  id:"Amm"  }
+  ];
+  // step — ступень минора, от которой строится лад
+  const MINOR_MODES = {
+    harm: [
+      { key:"harm",   step:0, name:"гармон. минор" },
+      { key:"dor4",   step:3, name:"дорийский #4" },
+      { key:"phrdom", step:4, name:"фригийский доминантовый" },
+      { key:"lyd2",   step:5, name:"лидийский #2" }
+    ],
+    mel: [
+      { key:"mel",    step:0, name:"мелод. минор" },
+      { key:"dorb2",  step:1, name:"дорийский b2" },
+      { key:"lyddom", step:3, name:"лидийский доминантовый" },
+      { key:"mixb6",  step:4, name:"миксолидийский b6" }
+    ]
+  };
+  // описание ладов — всплывающая подсказка при наведении в меню «Строй»
+  const MODE_DESC = {
+    dor:    "Ирландская и шотландская народная музыка",
+    phr:    "Испанская музыка, фламенко",
+    mix:    "Шотландская и ирландская волынка, ирландские народные песни",
+    harm:   "Классика, неоклассический метал",
+    dor4:   "Балканская и греческая народная музыка",
+    phrdom: "Арабская музыка (макам хиджаз), фламенко, балканская и греческая музыка"
+  };
 
-      // заголовок столбца ступеней в таблице
-      const th = document.getElementById('thDegree');
-      if(th) th.textContent = KEY_DEFS[CURRENT_KEY].degreeCol;
-
-      // квиз: тоника новой тональности как выбор по умолчанию
-      const tonic = currentRoots()[0];
-      state.quizPoolRoots = new Set([tonic]);
-      state.quizPoolQualities = new Set([ROOT_META[tonic].triad]);
-      state.quizPoolStrings = new Set();
-      state.quizAnsRoot = null;
-      state.quizAnsQuality = null;
-      state.quizAnsString = null;
-      state.quizResult = null;
-      state.quizRevealed = false;
-      state.quizId = null;
-
-      // таблица: в чипсах выбрана только тоника новой тональности
-      state.tableFilter = new Set([chordKey(tonic, ROOT_META[tonic].triad)]);
-
-      // перерисовка всех вкладок
-      renderTrainer();
-      renderQuiz();
-      renderBuilder();
-      renderTable();
-      if(playerState.song){ renderChordTrack(); renderPlayerChord(playerState.displayIndex); }
+  const TUNINGS = [];
+  const TUNING_ROWS = [];
+  MAJOR_ROWS.forEach(r=>{
+    const N = TUNING_SETS[r.set].notes, m = N.indexOf(r.major);
+    const items = MAJOR_MODES.map(md=>{
+      const tonic = N[(m + md.step) % 7];
+      const id = md.key==='major' ? tonic : (md.key==='minor' ? tonic + "m" : tonic + "-" + md.key);
+      const t = { id, name: tonic + " " + md.name, set:r.set, tonic, mode:md.key };
+      TUNINGS.push(t);
+      return t;
     });
+    TUNING_ROWS.push({ set:r.set, kind:"major", items });
+  });
+  MINOR_ROWS.forEach(r=>{
+    const N = TUNING_SETS[r.set].notes, m = N.indexOf(r.tonic);
+    const items = MINOR_MODES[r.kind].map(md=>{
+      const tonic = N[(m + md.step) % 7];
+      const id = md.step===0 ? r.id : tonic + "-" + md.key;
+      const t = { id, name: tonic + " " + md.name, set:r.set, tonic, mode:md.key };
+      TUNINGS.push(t);
+      return t;
+    });
+    TUNING_ROWS.push({ set:r.set, kind:"minor", items });
+  });
+
+  const ROMAN_NUM = ["I","II","III","IV","V","VI","VII"];
+  const QUALITY_TYPE = { maj:'triad', min:'triad', sus2:'sus2', sus4:'sus4', dom7:'seventh', maj7:'seventh', min7:'seventh' };
+  const SHAPE_STEPS = { triad:[0,2,4], sus2:[0,1,4], sus4:[0,3,4], seventh:[0,2,4,6] };
+  function notePc(n){
+    let p = {C:0,D:2,E:4,F:5,G:7,A:9,B:11}[n[0]];
+    for(const ch of n.slice(1)){ if(ch==='#') p++; else if(ch==='b') p--; }
+    return ((p%12)+12)%12;
+  }
+  function stringGroup(s){ return (15 - s) % 7; }
+
+  // исходные данные строя A мажор — сохраняются как есть и возвращаются при выборе
+  // ладов без перестройки
+  const ORIG = {
+    ROOTS: ROOTS.slice(),
+    ROOT_META: JSON.parse(JSON.stringify(ROOT_META)),
+    ROOT_SEVENTH: Object.assign({}, ROOT_SEVENTH),
+    CHORD_LETTERS: Object.assign({}, CHORD_LETTERS),
+    CHORD_META: JSON.parse(JSON.stringify(CHORD_META)),
+    CHORD_ORDER: CHORD_ORDER.slice(),
+    DATA: DATA.slice()
+  };
+  function refillObj(obj, src){ Object.keys(obj).forEach(k=>delete obj[k]); Object.assign(obj, src); }
+  function refillArr(arr, src){ arr.length = 0; src.forEach(x=>arr.push(x)); }
+
+  // для каждой группы струн: какое трезвучие и септаккорд на ней строятся
+  // (уменьшённые и увеличенные трезвучия не используются — такая ступень пропускается)
+  function analyzeSet(set){
+    const N = set.notes;
+    const info = [];
+    for(let c=0;c<7;c++){
+      const iv = k => (notePc(N[(c+k)%7]) - notePc(N[c]) + 12) % 12;
+      const t = iv(2)+','+iv(4);
+      const triad = t==='4,7' ? 'maj' : (t==='3,7' ? 'min' : null);
+      const s7 = t+','+iv(6);
+      const seventh = s7==='4,7,10' ? 'dom7' : (s7==='4,7,11' ? 'maj7' : (s7==='3,7,10' ? 'min7' : null));
+      const letters = {};
+      Object.keys(SHAPE_STEPS).forEach(type=>{ letters[type] = SHAPE_STEPS[type].map(x=>N[(c+x)%7]).join(' · '); });
+      info.push({ triad, seventh, letters });
+    }
+    return info;
+  }
+  function qualityForShape(inf, type){
+    if(!inf.triad) return null;
+    if(type==='triad') return inf.triad;
+    if(type==='seventh') return inf.seventh;
+    return type; // sus2 / sus4
+  }
+
+  // аккорды и аппликатуры для перестроенного строя
+  function buildSetData(set, tonic){
+    const N = set.notes;
+    const info = analyzeSet(set);
+    // порядок ступеней (клавиши 1-6 в «Аккордах», последовательности): для обычного строя —
+    // от его мажорной тоники (I ii iii IV V vi), для гармонического минора — от тоники лада
+    let first = -1;
+    for(let c=0;c<7;c++){
+      if(info[c].triad==='maj' && info[(c+3)%7].triad==='maj' && info[(c+4)%7].triad==='maj'){ first = c; break; }
+    }
+    if(first < 0) first = N.indexOf(tonic);
+    const groups = [];
+    for(let k=0;k<7;k++){ const c=(first+k)%7; if(info[c].triad) groups.push(c); }
+
+    const roots = groups.map(c=>N[c]);
+    const rootMeta = {}, seventh = {}, letters = {};
+    groups.forEach(c=>{
+      const rn = ROMAN_NUM[(c - first + 7) % 7];
+      rootMeta[N[c]] = { roman: info[c].triad==='min' ? rn.toLowerCase() : rn, triad: info[c].triad };
+      if(info[c].seventh) seventh[N[c]] = info[c].seventh;
+      Object.keys(SHAPE_STEPS).forEach(type=>{
+        const q = qualityForShape(info[c], type);
+        if(q) letters[chordKey(N[c], q)] = info[c].letters[type];
+      });
+    });
+
+    // аппликатуры: исходные (те же струны, новые названия) + аппликатуры от струн 13/6
+    const shapes = [];
+    RAW.forEach(r=>{
+      const parts = r.chord.split('_');
+      shapes.push({ src:r, group: TUNING_SETS.base.notes.indexOf(parts[0]), type: QUALITY_TYPE[parts[1]] });
+    });
+    RAW_G.forEach(r=> shapes.push({ src:r, group:2, type:r.type }));
+    const data = [];
+    shapes.forEach(sh=>{
+      const q = qualityForShape(info[sh.group], sh.type);
+      if(!q) return;
+      const chord = chordKey(N[sh.group], q);
+      data.push({
+        id: chord + "_" + sh.src.topString, idx: data.length,
+        chord, open: sh.src.open.slice(), covered: sh.src.covered.slice(), topString: sh.src.topString,
+        degAmaj:"", degFmin:"", comment: sh.src.comment || "", start: sh.src.start || ""
+      });
+    });
+    return { roots, rootMeta, seventh, letters, data };
+  }
+
+  function rebuildChordMeta(){
+    refillObj(CHORD_META, {});
+    CHORD_ORDER.length = 0;
+    ROOTS.forEach(root=>{
+      qualitiesFor(root).forEach(q=>{
+        const key = chordKey(root, q);
+        if(CHORD_META[key]) return;
+        CHORD_META[key] = {
+          roman: ROOT_META[root].roman,
+          letters: CHORD_LETTERS[key] || "—",
+          name: root + " " + QUALITY_META[q].label,
+          shortName: root + QUALITY_META[q].suffix,
+          root, quality:q
+        };
+        CHORD_ORDER.push(key);
+      });
+    });
+  }
+
+  // ноты струн, MIDI-высоты, аккорды и аппликатуры под выбранный набор нот
+  function applyStringSet(setId){
+    const set = TUNING_SETS[setId];
+    for(let s=1;s<=15;s++) STRING_NOTES[s] = set.notes[stringGroup(s)];
+
+    refillObj(STRING_TO_PITCH, {});
+    refillObj(PITCH_TO_STRING, {});
+    for(let i=0;i<15;i++){
+      const st = 15 - i;
+      const pt = STRING_BASE_PITCH + STRING_PITCH_OFFSETS[i] + set.shift[stringGroup(st)];
+      STRING_TO_PITCH[st] = pt;
+      PITCH_TO_STRING[pt] = st;
+    }
+    STRING_PITCH_MIN = Math.min(...Object.values(STRING_TO_PITCH));
+    STRING_PITCH_MAX = Math.max(...Object.values(STRING_TO_PITCH));
+    refillObj(NOTE_TO_STRINGS, {});
+    Object.entries(STRING_NOTES).forEach(([str,note])=>{
+      (NOTE_TO_STRINGS[note] = NOTE_TO_STRINGS[note]||[]).push(Number(str));
+    });
+
+    if(setId==='base'){
+      refillArr(ROOTS, ORIG.ROOTS);
+      refillObj(ROOT_META, JSON.parse(JSON.stringify(ORIG.ROOT_META)));
+      refillObj(ROOT_SEVENTH, ORIG.ROOT_SEVENTH);
+      refillObj(CHORD_LETTERS, ORIG.CHORD_LETTERS);
+      refillObj(CHORD_META, JSON.parse(JSON.stringify(ORIG.CHORD_META)));
+      refillArr(CHORD_ORDER, ORIG.CHORD_ORDER);
+      refillArr(DATA, ORIG.DATA);
+      return;
+    }
+    const t = TUNINGS.find(x=>x.id===CURRENT_KEY);
+    const b = buildSetData(set, t ? t.tonic : set.notes[3]);
+    refillArr(ROOTS, b.roots);
+    refillObj(ROOT_META, b.rootMeta);
+    refillObj(ROOT_SEVENTH, b.seventh);
+    refillObj(CHORD_LETTERS, b.letters);
+    refillArr(DATA, b.data);
+    rebuildChordMeta();
+  }
+
+  // ступени для подписи (римские цифры) — от тоники выбранного лада/тональности
+  function keyDefFor(t){
+    const N = TUNING_SETS[t.set].notes;
+    const info = analyzeSet(TUNING_SETS[t.set]);
+    const tc = N.indexOf(t.tonic);
+    const order = [], roman = {};
+    for(let k=0;k<7;k++){
+      const c = (tc+k)%7;
+      if(!info[c].triad) continue;
+      order.push(N[c]);
+      roman[N[c]] = info[c].triad==='min' ? ROMAN_NUM[k].toLowerCase() : ROMAN_NUM[k];
+    }
+    return { label:t.name, degreeCol:"Ступень в " + t.name, cardLine:"Ступень в " + t.name, order, roman };
+  }
+  // A мажор и F# минор — прежние подписи; для остальных пунктов меню — по формуле выше
+  TUNINGS.forEach(t=>{ if(!KEY_DEFS[t.id]) KEY_DEFS[t.id] = keyDefFor(t); });
+  // ступени 1..7 считаются от тоники выбранного лада: в A мажор 1 = A, в F# минор 1 = F#m.
+  // Если на ступени нет мажорного/минорного аккорда (уменьшённый и т.п.) — ступень пустая
+  TUNINGS.forEach(t=>{
+    const N = TUNING_SETS[t.set].notes, info = analyzeSet(TUNING_SETS[t.set]), tc = N.indexOf(t.tonic);
+    KEY_DEFS[t.id].degrees = [0,1,2,3,4,5,6].map(k=>{ const c = (tc+k)%7; return info[c].triad ? N[c] : null; });
+  });
+  function degreeRoot(d){
+    const r = (KEY_DEFS[CURRENT_KEY].degrees || [])[d-1];
+    return (r && ROOTS.includes(r) && ROOT_META[r]) ? r : null;
+  }
+
+  const tuningBtn = document.getElementById('tuningBtn');
+  const tuningBtnLabel = document.getElementById('tuningBtnLabel');
+  const tuningList = document.getElementById('tuningList');
+  const tuningDropdown = document.getElementById('tuningDropdown');
+
+  function shapeKey(d){ return d.open.slice().sort((a,b)=>b-a).join(','); }
+  // та же аппликатура (те же струны) в новом строе — для ячеек «Аккордов»
+  function remapIdByShape(id, oldData){
+    if(!id) return null;
+    const old = oldData.find(d=>d.id===id);
+    if(!old) return null;
+    const key = shapeKey(old);
+    const type = QUALITY_TYPE[old.chord.split('_')[1]];
+    const same = DATA.filter(d=>shapeKey(d)===key);
+    const best = same.find(d=>QUALITY_TYPE[d.chord.split('_')[1]]===type) || same[0];
+    return best ? best.id : null;
+  }
+
+  function applyTuning(id, initial){
+    const t = TUNINGS.find(x=>x.id===id) || TUNINGS[0];
+    const oldData = DATA.slice();
+    CURRENT_KEY = t.id;
+    applyStringSet(t.set);
+    tuningBtnLabel.textContent = t.name;
+
+    // заголовок столбца ступеней в таблице
+    const th = document.getElementById('thDegree');
+    if(th) th.textContent = KEY_DEFS[CURRENT_KEY].degreeCol;
+
+    const tonic = currentRoots()[0];
+
+    // тренажёр: если выбранный аккорд есть и в новом строе — оставляем, иначе тоника
+    const cur = state.currentId ? byId(state.currentId) : null;
+    if(!(cur && cur.chord===state.currentChord && CHORD_META[state.currentChord])){
+      state.currentRoot = tonic;
+      state.currentQuality = ROOT_META[tonic].triad;
+      selectFirstAvailable();
+    }
+
+    // квиз: тоника новой тональности как выбор по умолчанию
+    state.quizPoolRoots = new Set([tonic]);
+    state.quizPoolQualities = new Set([ROOT_META[tonic].triad]);
+    state.quizPoolStrings = new Set();
+    state.quizAnsRoot = null;
+    state.quizAnsQuality = null;
+    state.quizAnsString = null;
+    state.quizResult = null;
+    state.quizRevealed = false;
+    state.quizId = null;
+
+    // таблица: в чипсах выбрана только тоника новой тональности
+    state.tableFilter = new Set([chordKey(tonic, ROOT_META[tonic].triad)]);
+
+    // «Аккорды»: аккорды в ячейках остаются на тех же струнах, название — по новому строю
+    state.sequence = state.sequence.map(sid=>remapIdByShape(sid, oldData));
+
+    if(initial) return;
+    try{ storage.set('tuning', t.id); }catch(e){}
+
+    // перерисовка всех вкладок
+    renderTrainer();
+    renderQuiz();
+    renderBuilder();
+    renderTable();
+    if(playerState.timeline){ rebuildSongFromTimeline(); recomputeCoveredBars(); }
+    if(playerState.song){ renderChordTrack(); renderPlayerChord(playerState.displayIndex); }
+  }
+
+  // какие струны перестроить относительно A мажора — подпись в строке меню
+  const GROUP_STRINGS = ["15, 8, 1","14, 7","13, 6","12, 5","11, 4","10, 3","9, 2"];
+  const GROUP_SIZE = [3,2,2,2,2,2,2];
+  function retuneCount(setId){
+    return TUNING_SETS[setId].shift.reduce((n,v,g)=> n + (v ? GROUP_SIZE[g] : 0), 0);
+  }
+  function retuneHintLines(setId){
+    const set = TUNING_SETS[setId], base = TUNING_SETS.base;
+    if(retuneCount(setId)===0) return ["без перестройки"];
+    if(set.shift.every(v=>v===1)) return ["все струны — на полтона ↑"];
+    if(set.shift.every(v=>v===-1)) return ["все струны — на полтона ↓"];
+    const kept = set.shift.map((v,g)=>v?null:g).filter(g=>g!==null);
+    const moved = set.shift.filter(v=>v);
+    if(kept.length===1 && moved.every(v=>v===moved[0])){
+      return [`все, кроме ${GROUP_STRINGS[kept[0]]} — на полтона ${moved[0]>0?'↑':'↓'}`];
+    }
+    const lines = [];
+    set.shift.forEach((v,g)=>{
+      if(v) lines.push(`${GROUP_STRINGS[g]} — ${base.notes[g]} → ${set.notes[g]} ${v>0?'↑':'↓'}`);
+    });
+    return lines;
+  }
+  // строки меню: строи мажора — по числу перестраиваемых струн (A мажор первым),
+  // ниже отдельным блоком гармон. и мелод. минор
+  function sortedRows(kind){
+    return TUNING_ROWS.map((r,i)=>({ r, i })).filter(x=>x.r.kind===kind)
+      .sort((a,b)=> (retuneCount(a.r.set) - retuneCount(b.r.set)) || (a.i - b.i)).map(x=>x.r);
+  }
+  function renderTuningList(){
+    const item = t => {
+      const desc = MODE_DESC[t.mode];
+      return `<div class="progression-item tuning-item ${t.id===CURRENT_KEY?'active':''}" data-tuning="${t.id}"${desc?` data-desc="${desc}"`:''}><span class="pname">${t.name}</span></div>`;
+    };
+    const row = (r, cols) => {
+      const cells = r.items.map(item);
+      while(cells.length < cols) cells.push('<div></div>');
+      return cells.join("") + `<div class="tuning-hint">${retuneHintLines(r.set).map(l=>`<div>${l}</div>`).join("")}</div>`;
+    };
+    tuningList.innerHTML = `<div class="tuning-grid">${
+      sortedRows('major').map(r=>row(r, 6)).join("") +
+      '<div class="tuning-sep"></div>' +
+      sortedRows('minor').map(r=>row(r, 6)).join("")
+    }</div>`;
+    tuningList.querySelectorAll('[data-tuning]').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        hideTuningTip();
+        closeTuningList();
+        if(el.dataset.tuning !== CURRENT_KEY) applyTuning(el.dataset.tuning);
+      });
+      if(el.dataset.desc){
+        el.addEventListener('mouseenter', ()=> showTuningTip(el));
+        el.addEventListener('mouseleave', hideTuningTip);
+      }
+    });
+  }
+  // всплывающая подсказка с описанием лада
+  const tuningTip = document.createElement('div');
+  tuningTip.className = 'tuning-tip';
+  document.body.appendChild(tuningTip);
+  function showTuningTip(el){
+    tuningTip.textContent = el.dataset.desc;
+    tuningTip.style.display = 'block';
+    const r = el.getBoundingClientRect();
+    const tw = tuningTip.offsetWidth, th = tuningTip.offsetHeight;
+    let left = Math.min(window.innerWidth - tw - 8, Math.max(8, r.left));
+    let top = r.bottom + 4;
+    if(top + th > window.innerHeight - 8) top = r.top - th - 4;
+    tuningTip.style.left = left + 'px';
+    tuningTip.style.top = top + 'px';
+  }
+  function hideTuningTip(){ tuningTip.style.display = 'none'; }
+  // высота меню — до низа окна; прокрутка появляется, только если меню не помещается
+  function fitTuningList(){
+    tuningList.style.maxHeight = 'none';
+    const top = tuningList.getBoundingClientRect().top;
+    tuningList.style.maxHeight = Math.max(200, window.innerHeight - top - 12) + 'px';
+  }
+  window.addEventListener('resize', ()=>{ if(tuningList.style.display!=='none') fitTuningList(); });
+  function openTuningList(){
+    renderTuningList();
+    tuningList.style.display = 'block';
+    fitTuningList();
+    tuningBtn.classList.add('active');
+    const act = tuningList.querySelector('.tuning-item.active');
+    if(act) act.scrollIntoView({block:'nearest'});
+  }
+  function closeTuningList(){
+    hideTuningTip();
+    tuningList.style.display = 'none';
+    tuningBtn.classList.remove('active');
+  }
+  tuningBtn.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    if(tuningList.style.display==='none') openTuningList(); else closeTuningList();
+  });
+  document.addEventListener('click', (e)=>{
+    if(tuningList.style.display!=='none' && !tuningDropdown.contains(e.target)) closeTuningList();
+  });
+  document.addEventListener('keydown', (e)=>{
+    if(e.key==='Escape' && tuningList.style.display!=='none') closeTuningList();
   });
 
   /* ============================================================
@@ -1713,6 +2236,8 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
       document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
       document.getElementById('view-'+btn.dataset.view).classList.add('active');
       document.getElementById('builderToolbar').style.display = btn.dataset.view==='builder' ? 'flex' : 'none';
+      document.getElementById('playerToolbar').style.display = btn.dataset.view==='player' ? 'flex' : 'none';
+      if(btn.dataset.view!=='player') closePlayerMenu();
       if(btn.dataset.view==='table') renderTable();
       if(btn.dataset.view==='builder') renderBuilder();
       if(btn.dataset.view==='quiz') renderQuiz();
@@ -1731,6 +2256,8 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
     document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
     document.getElementById('view-trainer').classList.add('active');
     document.getElementById('builderToolbar').style.display = 'none';
+    document.getElementById('playerToolbar').style.display = 'none';
+    closePlayerMenu();
     renderTrainer();
   }
 
@@ -1774,24 +2301,42 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
       { chord: "D_maj",  degree: 4, start: 6.5, dur: 1.5 },
       { chord: "E_maj",  degree: 5, start: 8,   dur: 4 }
     ],
+    // аккорд в песне определяется по зелёным нотам (открытые струны аппликатуры),
+    // поэтому каждый аккорд записан своими струнами; type:"melody" — жёлтые ноты мелодии
     melody: [
-      { string: 12, start: 0,    dur: 0.5 },
-      { string: 10, start: 0.5,  dur: 0.5 },
-      { string: 12, start: 1,    dur: 0.5 },
-      { string: 15, start: 1.75, dur: 0.75 },
-      { string: 12, start: 4,    dur: 1 },
-      { string: 10, start: 5,    dur: 0.5 },
-      { string: 12, start: 6.5,  dur: 1.5 }
+      { string: 15, start: 0,   dur: 4 },
+      { string: 12, start: 0,   dur: 4 },
+      { string: 10, start: 0,   dur: 4 },
+      { string: 14, start: 4,   dur: 2.5 },
+      { string: 12, start: 4,   dur: 2.5 },
+      { string: 10, start: 4,   dur: 2.5 },
+      { string: 14, start: 6.5, dur: 1.5 },
+      { string: 12, start: 6.5, dur: 1.5 },
+      { string: 9,  start: 6.5, dur: 1.5 },
+      { string: 15, start: 8,   dur: 4 },
+      { string: 13, start: 8,   dur: 4 },
+      { string: 11, start: 8,   dur: 4 },
+      { string: 5,  start: 0,    dur: 1,   type: "melody" },
+      { string: 3,  start: 1,    dur: 0.5, type: "melody" },
+      { string: 4,  start: 1.5,  dur: 0.5, type: "melody" },
+      { string: 5,  start: 2,    dur: 2,   type: "melody" },
+      { string: 7,  start: 4,    dur: 1,   type: "melody" },
+      { string: 5,  start: 5,    dur: 1.5, type: "melody" },
+      { string: 2,  start: 6.5,  dur: 1.5, type: "melody" },
+      { string: 4,  start: 8,    dur: 1,   type: "melody" },
+      { string: 6,  start: 9,    dur: 1,   type: "melody" },
+      { string: 8,  start: 10,   dur: 2,   type: "melody" }
     ]
   };
 
-  // ступень можно вписать обычным числом (1..6) вместо римской — тогда она
-  // важнее поля "chord": 1=A, 2=B, 3=C#, 4=D, 5=E, 6=F#. Качество аккорда
-  // (мажор/минор) берётся по умолчанию для этой ступени, если не указано "quality".
+  // ступень можно вписать обычным числом (1..7) вместо римской — тогда она
+  // важнее поля "chord". Ступени считаются от тоники выбранного строя/лада:
+  // в A мажор 1=A, 2=B, 3=C#, 4=D, 5=E, 6=F#; в F# минор 1=F#, 3=A, 4=B и т.д.
+  // Качество аккорда (мажор/минор) берётся по умолчанию для этой ступени, если не указано "quality".
   function resolveChordCode(c){
     const deg = Number(c.degree);
     if(c.degree!==undefined && c.degree!==null && c.degree!=="" && !isNaN(deg)){
-      const root = ROOTS[deg-1];
+      const root = degreeRoot(deg);
       if(root){
         const quality = c.quality && QUALITY_META[c.quality] ? c.quality : ROOT_META[root].triad;
         return chordKey(root, quality);
@@ -1829,7 +2374,12 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
     (NOTE_TO_STRINGS[note] = NOTE_TO_STRINGS[note]||[]).push(Number(str));
   });
 
-  function midiPitchToName(p){ return NOTE_NAMES_SHARP[((p%12)+12)%12]; }
+  function midiPitchToName(p){
+    // название ноты — как она называется в текущем строе (например Bb, а не A#)
+    const pc = ((p%12)+12)%12;
+    for(const s in STRING_NOTES){ if(notePc(STRING_NOTES[s])===pc) return STRING_NOTES[s]; }
+    return NOTE_NAMES_SHARP[pc];
+  }
 
   function guessChordFromPitches(pitches){
     // pitches: массив midi-номеров (нижние 3-4 ноты аккорда), сортируем по возрастанию
@@ -1863,8 +2413,8 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
     if(typeof PITCH_TO_STRING !== 'undefined'){
       if(PITCH_TO_STRING[pitch] !== undefined) return PITCH_TO_STRING[pitch];
       let q = pitch;
-      while(q < STRING_BASE_PITCH) q += 12;
-      while(q > STRING_BASE_PITCH + 24) q -= 12;
+      while(q < STRING_PITCH_MIN) q += 12;
+      while(q > STRING_PITCH_MAX) q -= 12;
       if(PITCH_TO_STRING[q] !== undefined) return PITCH_TO_STRING[q];
     }
     const name = midiPitchToName(pitch);
@@ -1882,6 +2432,7 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
   /* ---- соответствие струн и MIDI-нот (струна 15 = E3) ---- */
   const STRING_PITCH_OFFSETS = [0,2,4,5,7,9,10,12,14,16,17,19,21,22,24]; // от струны 15 к струне 1
   const STRING_BASE_PITCH = 52;
+  let STRING_PITCH_MIN = 52, STRING_PITCH_MAX = 76; // самая низкая / высокая струна (меняется при перестройке)
   const STRING_TO_PITCH = {};
   const PITCH_TO_STRING = {};
   for(let i=0;i<15;i++){
@@ -1893,8 +2444,8 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
   function pitchToString(p){
     if(PITCH_TO_STRING[p] !== undefined) return PITCH_TO_STRING[p];
     let q = p;
-    while(q < STRING_BASE_PITCH) q += 12;
-    while(q > STRING_BASE_PITCH + 24) q -= 12;
+    while(q < STRING_PITCH_MIN) q += 12;
+    while(q > STRING_PITCH_MAX) q -= 12;
     if(PITCH_TO_STRING[q] !== undefined) return PITCH_TO_STRING[q];
     return pickStringForNote(p, 8);
   }
@@ -1943,12 +2494,14 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
     const denPow = Math.round(Math.log2(den)) || 2;
 
     const chordNotes = [], melodyNotes = [];
+    // в MIDI пишем только звучащие ноты: зелёные (открытые струны аккорда) — канал 1,
+    // жёлтые (мелодия) — канал 2. Красные (зажатые) струны не звучат и в файл не попадают
     (tl.melody||[]).forEach(n=>{
       const item = { string:n.string, start:n.start, dur:Math.max(0.05, n.dur) };
-      if(noteType(n)==='melody') melodyNotes.push(item); else chordNotes.push(item);
+      const t = noteType(n);
+      if(t==='melody') melodyNotes.push(item);
+      else if(t==='open') chordNotes.push(item);
     });
-    // авто-полоски зажатых струн аккорда тоже пишем в канал аккорда
-    (coveredBarsCache||[]).forEach(b=> chordNotes.push({ string:b.string, start:b.start, dur:Math.max(0.05, b.end-b.start) }));
 
     const micros = Math.round(60000000/bpm);
     const track0 = midiTrackChunk([
@@ -2045,6 +2598,7 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
 
     let tempoMicros = 500000; // 120 BPM по умолчанию
     const allEvents = []; // {tick, pitch, on}
+    const trackNames = []; // названия дорожек — по ним узнаём файл, сохранённый самим приложением
 
     for(let t=0; t<numTracks; t++){
       if(readStr(4)!=='MTrk') break;
@@ -2062,6 +2616,11 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
           let len; [len,pos] = readVarLen(bytes,pos);
           if(metaType===0x51 && len===3){
             tempoMicros = (bytes[pos]<<16)|(bytes[pos+1]<<8)|bytes[pos+2];
+          }
+          if(metaType===0x03 || metaType===0x01){
+            let txt = '';
+            try{ txt = new TextDecoder().decode(bytes.slice(pos, pos+len)); }catch(e){}
+            trackNames.push(txt.trim());
           }
           pos += len;
         } else if(statusByte===0xf0 || statusByte===0xf7){
@@ -2091,7 +2650,10 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
     const notesWithDur = buildMidiNotes(allEvents);
     const hasCh0 = notesWithDur.some(n=>n.ch===0);
     const hasCh1 = notesWithDur.some(n=>n.ch===1);
-    if(hasCh0 && hasCh1){
+    // файл, сохранённый самим приложением (дорожки «Chords» / «Melody»), разбираем
+    // по каналам всегда — даже если в песне нет жёлтых нот и канал мелодии пустой
+    const ownFile = trackNames.includes('Chords') && trackNames.includes('Melody');
+    if((hasCh0 && hasCh1) || (ownFile && (hasCh0 || hasCh1))){
       return midiChannelsToSong(notesWithDur, division, bpm, filename);
     }
 
@@ -2442,6 +3004,19 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
     coveredBarsCache = [];
     const tl = playerState.timeline;
     if(!tl) return;
+    // одно и то же созвучие может попасть в несколько отрезков (аккорд тянется через такт)
+    // или найтись повторно (внутри аккорда началась ещё одна нота) — рисуем его полоски один раз
+    const doneGlobal = new Set();
+    function pushBar(sn, start, end){
+      // если на этой струне уже есть полоска, пересекающаяся по времени, — не дублируем её
+      for(const b of coveredBarsCache){
+        if(b.string !== sn) continue;
+        if(b.start <= start + 1e-6 && b.end >= end - 1e-6) return;          // уже покрыто целиком
+        if(b.start <= start + 1e-6 && b.end > start + 1e-6) start = b.end;     // обрезаем начало
+        if(b.start >= start - 1e-6 && b.start < end - 1e-6) end = b.start;     // обрезаем конец
+      }
+      if(end - start > 1e-6) coveredBarsCache.push({ string: sn, start, end });
+    }
     tl.chords.forEach(c=>{
       const notes = melodyForTlChord(c).slice().sort((a,b)=> a.start - b.start);
       if(notes.length < 3) return;
@@ -2466,16 +3041,21 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
         const positions = positionsFor(matched);
         if(!positions.length) return;
         const fingering = positions[0];
-        const minDur = Math.min(...used.map(u=>u.dur));
         const usedStrings = new Set(used.map(u=>u.string));
-        const segEnd = n.start + minDur;
+        // полоски — ровно на то время, пока одновременно звучат все ноты аккорда
+        const segStart = Math.max(...used.map(u=>u.start));
+        const segEnd = Math.min(...used.map(u=>u.start + u.dur));
+        if(segEnd - segStart <= 1e-6) return;
+        const gKey = [...usedStrings].sort((a,b)=>a-b).join(',') + '@' + segStart;
+        if(doneGlobal.has(gKey)) return;
+        doneGlobal.add(gKey);
         (fingering.covered||[]).forEach(sn=>{
           if(usedStrings.has(sn)) return;
           // если на этой струне уже нарисована вручную красная (закрытая) нота,
           // которая пересекается по времени — она в приоритете, авто-полоску не рисуем
-          const manualClosed = tl.melody.some(mn=> noteType(mn)==='closed' && mn.string===sn && mn.start < segEnd - 1e-6 && mn.start + mn.dur > n.start + 1e-6);
+          const manualClosed = tl.melody.some(mn=> noteType(mn)==='closed' && mn.string===sn && mn.start < segEnd - 1e-6 && mn.start + mn.dur > segStart + 1e-6);
           if(manualClosed) return;
-          coveredBarsCache.push({ string: sn, start: n.start, end: segEnd });
+          pushBar(sn, segStart, segEnd);
         });
       });
     });
@@ -2633,11 +3213,13 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
     const now = metroCtx.currentTime;
     const bpb = beatsPerBar();
     while(m.next < m.countIn + m.total){
-      const t = m.ctxT0 + m.next * m.step;
+      // если старт не с целой доли (после паузы), щелчки песни сдвигаются на целые доли
+      const songClick = m.next >= m.countIn;
+      const t = m.ctxT0 + (m.next + (songClick ? m.phase : 0)) * m.step;
       if(t > now + 0.15) break;
       if(t > now - 0.02 && metroEnabled()){
-        const accent = m.next >= m.countIn
-          ? (Math.round(m.startBeatPos + (m.next - m.countIn)) % bpb) === 0
+        const accent = songClick
+          ? ((m.firstBeat + (m.next - m.countIn)) % bpb) === 0
           : false;
         metroClick(t, accent);
       }
@@ -2648,10 +3230,13 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
   function startMetronome(beatMs, startBeatPos, totalBeats, countIn){
     stopMetronome();
     if(!ensureMetroCtx()) return;
+    const firstBeat = Math.ceil(startBeatPos - 1e-6); // первая целая доля песни после старта
     metroSched = {
       ctxT0: metroCtx.currentTime + 0.06,
       step: beatMs/1000,
       startBeatPos: startBeatPos,
+      firstBeat: firstBeat,
+      phase: Math.max(0, firstBeat - startBeatPos),
       countIn: countIn,
       total: Math.max(1, Math.ceil(totalBeats)),
       next: 0,
@@ -2683,23 +3268,42 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
     renderPlayerChord(0);
   });
 
+  // номер отрезка аккорда, в котором находится доля beat
+  function chordIndexAtBeat(beat){
+    const chords = (playerState.timeline && playerState.timeline.chords) || [];
+    let idx = 0;
+    chords.forEach((c,i)=>{ if(c.start <= beat + 1e-6) idx = i; });
+    return idx;
+  }
+
   playerPlayBtn.addEventListener('click', ()=>{
-    if(playerState.playing){ stopPlayback(); return; }
+    if(playerState.playing){
+      // пауза: линия воспроизведения остаётся на месте, следующий Play продолжит отсюда
+      const pos = ROLL.playing ? Math.min(rollBeat(), timelineEnd()) : ROLL.beat;
+      stopPlayback();
+      ROLL.beat = pos; ROLL.viewBeat = null;
+      const idx = chordIndexAtBeat(pos);
+      playerState.displayIndex = idx;
+      playerState.playIndex = idx;
+      renderChordTrack();
+      return;
+    }
     if(!playerState.song) return;
     const bpm = Number(playerBpmInput.value) || playerState.song.bpm || 90;
     playerState.song.bpm = bpm;
     const beatMs = 60000 / bpm;
-    const startIdx = playerState.displayIndex; // первый звучащий аккорд = тот, что сейчас показан
-    const startBeatPos = (playerState.timeline && playerState.timeline.chords[startIdx])
-      ? playerState.timeline.chords[startIdx].start : 0;
+    // старт — с того места, где стоит линия воспроизведения (после паузы, клика по ленте или по такту);
+    // если линия дошла до конца песни — с начала
+    let startBeatPos = Math.max(0, ROLL.beat || 0);
+    if(startBeatPos >= timelineEnd() - 1e-6) startBeatPos = 0;
+    const startIdx = chordIndexAtBeat(startBeatPos);
+    playerState.displayIndex = startIdx;
     ROLL.playing = false; ROLL.beat = startBeatPos; ROLL.viewBeat = null;
     playerState.playing = true;
     playerPlayBtn.classList.add('playing');
 
     // метроном: 4 доли отсчёта + вся длина песни от текущей позиции
-    let chordBeats = 0;
-    for(let p=startIdx; p<playerState.song.chords.length; p++) chordBeats += playerState.song.chords[p].durationBeats;
-    startMetronome(beatMs, startBeatPos, Math.max(chordBeats, timelineEnd() - startBeatPos), 4);
+    startMetronome(beatMs, startBeatPos, timelineEnd() - startBeatPos, 4);
 
     // отсчёт 4-3-2-1 перед стартом; во время отсчёта на экране остаётся текущий (первый) аккорд
     let count = 4;
@@ -2722,18 +3326,22 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
           renderPlayerChord(nextDisp);
         }
         renderChordTrack();
-        scheduleChords(startIdx, beatMs);
+        scheduleChords(startIdx, beatMs, startBeatPos);
       }
     }
     playerState.timers.push(setTimeout(tickCountIn, beatMs));
   });
 
-  function scheduleChords(startIdx, beatMs){
+  function scheduleChords(startIdx, beatMs, startBeatPos){
     const chords = playerState.song.chords;
+    const tlChords = (playerState.timeline && playerState.timeline.chords) || [];
     let elapsed = 0;
     for(let p=startIdx; p<chords.length; p++){
-      const durMs = chords[p].durationBeats * beatMs;
-      const atMs = elapsed + durMs;
+      // смена аккорда — в момент конца текущего отрезка, считая от места старта
+      const atMs = tlChords[p]
+        ? Math.max(0, (tlChords[p].start + tlChords[p].dur - startBeatPos) * beatMs)
+        : elapsed + chords[p].durationBeats * beatMs;
+      const durMs = atMs - elapsed;
       if(p+1 < chords.length){
         const playNext = p+1;
         const dispNext = p+2;
@@ -2750,8 +3358,6 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
     }
     // общая длина песни считается по последней ноте тоже, с округлением вверх до целого такта:
     // если аккорды кончились в 4-м такте, а нота стоит в 7-м — песня длится 7 тактов
-    const startBeatPos = (playerState.timeline && playerState.timeline.chords[startIdx])
-      ? playerState.timeline.chords[startIdx].start : 0;
     const totalMs = Math.max(elapsed, (timelineEnd() - startBeatPos) * beatMs);
     playerState.timers.push(setTimeout(()=>{ stopPlayback(); }, totalMs + 80));
   }
@@ -3284,6 +3890,8 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
     if(on) setNoteDrawType('open');
     playerRollCanvas.classList.toggle('editing', on);
     if(on) stopPlayback();
+    // в строке вкладок появились/пропали кнопки редактирования — подгоняем высоту ленты
+    requestAnimationFrame(()=>{ fitPlayerRoll(); drawPlayerRoll(); updateRollScrollbar(); });
   }
   function startBlankSong(){
     loadSong({
@@ -3297,6 +3905,41 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
   playerEditBtn.addEventListener('click', ()=>{
     if(!playerState.timeline) startBlankSong();
     setEditMode(!EDIT.on);
+    closePlayerMenu();
+  });
+
+  /* ---- кнопка «Меню» на панели песни (загрузка, скачивание, редактирование, цвета нот) ---- */
+  const playerMenuBtn = document.getElementById('playerMenuBtn');
+  const playerMenuPanel = document.getElementById('playerMenuPanel');
+  const playerMenuDropdown = document.getElementById('playerMenuDropdown');
+  function playerMenuIsOpen(){
+    return playerMenuPanel.classList.contains('open') || playerMenuPanel.classList.contains('mopen');
+  }
+  function openPlayerMenu(){
+    if(window.matchMedia('(max-width: 900px)').matches){
+      // на телефоне меню — это выезжающая снизу панель
+      playerMenuPanel.classList.add('mopen');
+      document.getElementById('view-player').classList.add('mpanel-open');
+      return;
+    }
+    playerMenuPanel.classList.add('open');
+    playerMenuBtn.classList.add('active');
+  }
+  function closePlayerMenu(){
+    playerMenuPanel.classList.remove('open','mopen');
+    playerMenuBtn.classList.remove('active');
+    document.getElementById('view-player').classList.remove('mpanel-open');
+  }
+  playerMenuBtn.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    if(playerMenuIsOpen()) closePlayerMenu(); else openPlayerMenu();
+  });
+  document.addEventListener('click', (e)=>{
+    if(!playerMenuPanel.classList.contains('open')) return;
+    if(!playerMenuDropdown.contains(e.target)) closePlayerMenu();
+  });
+  document.addEventListener('keydown', (e)=>{
+    if(e.key==='Escape' && playerMenuPanel.classList.contains('open')) closePlayerMenu();
   });
 
   if(playerRollCanvas){
@@ -3461,6 +4104,7 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
     function setMobilePanel(open){
       if(!viewPlayerEl) return;
       viewPlayerEl.classList.toggle('mpanel-open', !!open);
+      playerMenuPanel.classList.toggle('mopen', !!open);
       requestAnimationFrame(()=>{ fitPlayerRoll(); drawPlayerRoll(); updateRollScrollbar(); });
     }
     if(viewPlayerEl){
@@ -3695,19 +4339,32 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
     { name:"Минорный ход",       degrees:[6,3,4,1] },   // vi–iii–IV–I
     { name:"Плагальный",         degrees:[4,1,4,5] },   // IV–I–IV–V
   ];
-  const ROMAN_BY_DEGREE = {1:"I",2:"ii",3:"iii",4:"IV",5:"V",6:"vi"};
-
   const progressionBtn = document.getElementById('progressionBtn');
   const progressionList = document.getElementById('progressionList');
   const progressionDropdown = document.getElementById('progressionDropdown');
   state.progressionOpen = false;
 
+  // аккорд ступени (трезвучие лада) в текущем наборе струн; null — если собрать нельзя
+  function progressionChordId(deg){
+    const root = degreeRoot(deg);
+    if(!root) return null;
+    const quality = ROOT_META[root].triad;
+    const positions = positionsFor(chordKey(root, quality));
+    if(!positions.length) return null;
+    const pos = positions[Math.min(state.builderStringSet, positions.length-1)];
+    return pos ? pos.id : null;
+  }
+  // последовательности, которые в текущем ладу собираются целиком (без пустых ячеек)
+  function availableProgressions(){
+    return PROGRESSIONS.map((p,i)=>({ p, i })).filter(({p})=> p.degrees.every(d=> degreeRoot(d)));
+  }
+
   function renderProgressionList(){
-    progressionList.innerHTML = PROGRESSIONS.map((p,i)=>`
+    progressionList.innerHTML = availableProgressions().map(({p,i},n)=>`
       <div class="progression-item" data-prog="${i}">
-        <span class="pnum">${i+1}</span>
+        <span class="pnum">${n+1}</span>
         <span class="pname">${p.name}</span>
-        <span class="pdegrees">${p.degrees.map(d=>ROMAN_BY_DEGREE[d]).join('–')}</span>
+        <span class="pdegrees">${p.degrees.map(d=>romanOf(degreeRoot(d))).join('–')}</span>
       </div>
     `).join("");
     progressionList.querySelectorAll('[data-prog]').forEach(item=>{
@@ -3721,15 +4378,8 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
   function applyProgression(idx){
     const prog = PROGRESSIONS[idx];
     if(!prog) return;
-    const ids = prog.degrees.map(deg=>{
-      const root = ROOTS[deg-1];
-      if(!root) return null;
-      const quality = ROOT_META[root].triad;
-      const positions = positionsFor(chordKey(root, quality));
-      if(!positions.length) return null;
-      const pos = positions[Math.min(state.builderStringSet, positions.length-1)];
-      return pos ? pos.id : null;
-    });
+    if(!prog.degrees.every(d=> degreeRoot(d))) return; // в этом ладу последовательность не собирается
+    const ids = prog.degrees.map(deg=> progressionChordId(deg));
     state.sequence = ids;
     state.seqLength = ids.length;
     state.builderFillIndex = ids.length;
@@ -3761,9 +4411,10 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
   // обработчиков клавиатуры конструктора, пока выпадашка открыта
   document.addEventListener('keydown', (e)=>{
     if(!state.progressionOpen) return;
-    if(e.key>='1' && e.key<='9' && +e.key<=PROGRESSIONS.length){
+    const avail = availableProgressions();
+    if(e.key>='1' && e.key<='9' && +e.key<=avail.length){
       e.preventDefault(); e.stopPropagation();
-      applyProgression(+e.key - 1);
+      applyProgression(avail[+e.key - 1].i);
       closeProgressionDropdown();
     } else {
       closeProgressionDropdown();
@@ -3789,16 +4440,20 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
     }
   }
   function addBuilderChordByDegree(rootIndex){
-    const root = ROOTS[rootIndex-1];
+    const root = degreeRoot(rootIndex); // ступень — от тоники выбранного лада
     if(!root) return;
     const quality = currentQualityForRoot(root);
+    if(!quality) return;
     const key = chordKey(root, quality);
     const positions = positionsFor(key);
     const pos = positions[state.builderStringSet];
     if(!pos) return; // такого набора струн для этого аккорда нет — ничего не делаем
-    ensureBuilderCell(state.builderFillIndex);
-    state.sequence[state.builderFillIndex] = pos.id;
-    state.builderFillIndex++;
+    // аккорд с клавиатуры всегда встаёт сразу после последнего заполненного аккорда
+    // (неважно, как заполнялись ячейки — клавишами, списком или после смены длины)
+    const idx = lastFilledSlotIndex() + 1;
+    ensureBuilderCell(idx);
+    state.sequence[idx] = pos.id;
+    state.builderFillIndex = idx + 1;
     renderBuilder();
   }
   function updateBuilderKbdIndicator(){
@@ -3859,7 +4514,7 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
   function editLastChordRoot(rootIndex){
     const idx = lastFilledSlotIndex();
     if(idx<0) return;
-    const root = ROOTS[rootIndex-1];
+    const root = degreeRoot(rootIndex); // ступень — от тоники выбранного лада
     if(!root) return;
     const curPos = byId(state.sequence[idx]);
     const curMeta = CHORD_META[curPos.chord];
@@ -3910,7 +4565,7 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
     if(!document.getElementById('view-builder').classList.contains('active')) return;
     if(isTypingTarget()) return;
     if(e.code==='Space') return; // обработано отдельным глобальным слушателем выше
-    if(e.key>='1' && e.key<='6'){
+    if(e.key>='1' && e.key<='7'){
       if(spaceHeld) editLastChordRoot(+e.key);
       else addBuilderChordByDegree(+e.key);
       e.preventDefault();
@@ -4048,6 +4703,16 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
         return b.open[0]-a.open[0]; // внутри одного аккорда — от большей струны к меньшей
       }
       else if(key==='degreeAmajNum'){ av=currentChordOrder().indexOf(a.chord); bv=currentChordOrder().indexOf(b.chord); }
+      else if(key==='letters' || key==='startNotation'){
+        // текст ячейки: «Буквы аккорда(обращение)» или «Струна начала аккорда»
+        const txt = d=> key==='letters' ? lettersWithInversion(d).replace(/<[^>]*>/g,'').trim() : String(d.start||'').trim();
+        av = txt(a); bv = txt(b);
+        const ea = !av || av==='—', eb = !bv || bv==='—';
+        if(ea!==eb) return ea ? 1 : -1; // пустые ячейки — всегда в конце
+        const c = av.localeCompare(bv, 'ru', {numeric:true});
+        if(c!==0) return dir==='asc' ? c : -c;
+        return b.open[0]-a.open[0];
+      }
       else { av=a[key]; bv=b[key]; }
       if(av<bv) return dir==='asc'?-1:1;
       if(av>bv) return dir==='asc'?1:-1;
@@ -4119,9 +4784,14 @@ var NOTE_GLOW   = { open:0,       cov:0,       melody:0       };
     await loadStorage();
     await loadTheme();
     applyColorMode(state.colorMode);
-    // при каждом запуске сбрасываем выбор на A мажор / самую нижнюю струну
-    state.currentRoot = "A";
-    state.currentQuality = "maj";
+    // выбранный строй запоминается между запусками (по умолчанию A мажор)
+    let savedTuning = null;
+    try{ const r = await storage.get('tuning'); if(r && r.value) savedTuning = r.value; }catch(e){}
+    applyTuning(TUNINGS.some(t=>t.id===savedTuning) ? savedTuning : 'A', true);
+    // при каждом запуске сбрасываем выбор на тонику строя / самую нижнюю струну
+    const tonic0 = currentRoots()[0];
+    state.currentRoot = tonic0;
+    state.currentQuality = ROOT_META[tonic0].triad;
     selectFirstAvailable();
     renderTrainer();
     wireNoteColorPanel();
